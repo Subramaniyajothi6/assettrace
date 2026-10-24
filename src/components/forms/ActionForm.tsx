@@ -52,7 +52,8 @@ export function ActionForm<R extends AnyResult>({ action, success, redirectTo, o
       return;
     }
     start(async () => {
-      const res: AnyResult = await action(fd);
+      const res: AnyResult | undefined = await action(fd);
+      if (!res) return; // the action redirected
       if (!res.ok) {
         setErrors(res.fieldErrors ?? {});
         toast.error(res.error);

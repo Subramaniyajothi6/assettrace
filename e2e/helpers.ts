@@ -20,3 +20,13 @@ export async function toast(page: Page, text: string | RegExp) {
 }
 
 export const uid = () => Date.now().toString(36).slice(-5).toUpperCase();
+
+import { PrismaClient } from "@prisma/client";
+/** Direct DB access for test setup/lookups (tests run against the demo database). */
+export const db = new PrismaClient();
+
+/** 1×1 PNG for upload tests. */
+export const PNG_1PX = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+);

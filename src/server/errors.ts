@@ -40,18 +40,23 @@ const UNIQUE_MESSAGES: Record<string, string> = {
   code: "Code already exists",
 };
 
+/** Zod issues as { field: first message }. */
+export function zodFieldErrors(err: ZodError): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const issue of err.issues) {
+    const key = issue.path.join(".");
+    if (key && !out[key]) out[key] = issue.message;
+  }
+  return out;
+}
+
 /** Convert anything thrown by a service into an ActionResult. Never leaks internals. */
 export function toActionError(err: unknown): { ok: false; error: string; fieldErrors?: Record<string, string> } {
   if (err instanceof AppError) {
     return { ok: false, error: err.message, fieldErrors: err.fieldErrors };
   }
   if (err instanceof ZodError) {
-    const fieldErrors: Record<string, string> = {};
-    for (const issue of err.issues) {
-      const key = issue.path.join(".");
-      if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
-    }
-    return { ok: false, error: "Please fix the highlighted fields.", fieldErrors };
+    return { ok: false, error: "Please fix the highlighted fields.", fieldErrors: zodFieldErrors(err) };
   }
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === "P2002") {

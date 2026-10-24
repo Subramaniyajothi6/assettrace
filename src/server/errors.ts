@@ -64,7 +64,8 @@ export function toActionError(err: unknown): { ok: false; error: string; fieldEr
       const fields = Array.isArray(target) ? target : [target];
       const fieldErrors: Record<string, string> = {};
       for (const f of fields) fieldErrors[f] = UNIQUE_MESSAGES[f] ?? "Already exists";
-      if (fields.includes("assetId")) {
+      // Partial unique index "one_active_assignment" (one active assignment per asset).
+      if (fields.includes("assetId") || fields.some((x) => String(x).includes("one_active_assignment"))) {
         return { ok: false, error: "This asset already has an active assignment." };
       }
       return { ok: false, error: Object.values(fieldErrors)[0] ?? "Duplicate value.", fieldErrors };

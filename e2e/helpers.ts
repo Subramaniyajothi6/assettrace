@@ -4,6 +4,7 @@ export const USERS = {
   admin: { email: "admin@assettrace.dev", password: "Admin@123" },
   manager: { email: "manager@assettrace.dev", password: "Manager@123" },
   employee: { email: "employee@assettrace.dev", password: "Employee@123" },
+  priya: { email: "priya@adz4needz.in", password: "Password@123" },
 } as const;
 
 export async function login(page: Page, who: keyof typeof USERS) {

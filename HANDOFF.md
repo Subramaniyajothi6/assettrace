@@ -16,7 +16,7 @@ Three roles: **Admin**, **Asset manager**, **Employee**.
 | Phase-by-phase build plan with ready prompts | Done | `docs/PLAN.md` |
 | Rules for Claude Code | Done | `CLAUDE.md` |
 | Clickable prototype of every page (31 screens, 3 roles, 8 styles) | Done, shared with team | `docs/prototype/` · live: https://subramaniyajothi6.github.io/assettrace-design/ |
-| Real app code (Next.js) | **Not started** | — |
+| Real app code (Next.js) | Phase 0–1 done (foundations, auth, shell, seed) | `src/` |
 | GitHub repo for the real app (`assettrace`) | Not created yet | — |
 | Supabase project + private `asset-files` bucket | Not created yet | — |
 | Vercel account | Not set up yet | — |
@@ -66,3 +66,10 @@ Where the docs and the prototype disagreed, the prototype wins on UI:
 - **Skins**: all 8 ported as CSS variables behind `data-skin` on `<html>` (default `warm`); dark mode only for warm/corporate/nordic, as in the prototype.
 - **Versions pinned**: Next 15, Prisma 6 (Prisma 7 drops `url`/`directUrl` in the schema), `@hookform/resolvers@5`, TanStack Table 8, Zod 4, xlsx from the official SheetJS CDN build (npm `xlsx` has unfixed advisories). shadcn's `form` is replaced by `field` in the current registry.
 - **Supabase**: project is in Tokyo (`ap-northeast-1`). RLS is enabled on every public table with no policies (migration `enable_rls`), so the anon REST API can't read anything; Prisma connects as the owner and is unaffected. DB URLs use `connect_timeout=30`.
+
+## Phase 1 notes (24 Oct 2026)
+- Demo logins: admin@assettrace.dev / Admin@123 · manager@assettrace.dev / Manager@123 · employee@assettrace.dev / Employee@123. Other seeded users: Password@123.
+- `npx prisma db seed` **wipes every table** and reloads the prototype's demo data (dates relative to today).
+- Skin CSS (`src/app/skins.css`) is generated from the prototype; tokens are prefixed `--at-*`, and the prototype classes `.dark`/`.blue`/`.grow` are renamed `.hero-dark`/`.hero-blue`/`.main-col`. The active skin is the `uiSkin` Setting row.
+- Role guards live in route-group layouts: `(staff)`, `(staff)/admin`, `(employee)`. Pages not built yet render `<ComingSoon phase={n}>`.
+- `EmployeeRequest.title` added (the prototype shows a title on every request).

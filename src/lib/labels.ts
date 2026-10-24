@@ -208,3 +208,15 @@ export const STATUS_TONES: Record<string, Tone> = {
   RECEIVED: "info",
   INSPECTED: "mute",
 };
+
+/** Solid status colours for charts and the location grid squares. */
+export const STATUS_COLORS: Record<AssetStatus, string> = {
+  ASSIGNED: "#3A6BB8",
+  AVAILABLE: "#3E8E5E",
+  RESERVED: "#7C5CC4",
+  UNDER_MAINTENANCE: "#D08A1E",
+  RETURNED: "#8C8579",
+  DAMAGED: "#C9472B",
+  LOST: "#B4232F",
+  RETIRED: "#B0AAA0",
+};

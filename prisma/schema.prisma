@@ -571,6 +571,7 @@ model EmployeeRequest {
   id             String        @id @default(cuid())
   requestNo      String        @unique // REQ-0001
   type           RequestType
+  title          String
   description    String
   priority       Priority      @default(MEDIUM)
   status         RequestStatus @default(PENDING)

@@ -3,6 +3,7 @@ import type { CurrentUser } from "@/server/permissions";
 import type { AssetDetail } from "@/server/queries/assets";
 import { ConfirmButton } from "@/components/forms/ConfirmButton";
 import { reopenHandoverAction } from "@/actions/assignments";
+import { requestReturnAction } from "@/actions/requests";
 import { TransferDialog } from "@/components/TransferDialog";
 import { employeeOptions, locationOptions } from "@/server/queries/people";
 
@@ -14,7 +15,7 @@ type Props = {
 };
 
 /** Lifecycle buttons for the asset page; each shows only when the state machine allows it. */
-export async function AssetActions({ asset: a, user, pendingTransfer }: Props) {
+export async function AssetActions({ asset: a, user, pendingTransfer, openReturn }: Props) {
   if (a.status === "RETIRED") return null;
   const manages = user.role === "ADMIN" || (!!a.departmentId && user.managedDepartmentIds.includes(a.departmentId));
   if (!manages) return null;
@@ -36,6 +37,17 @@ export async function AssetActions({ asset: a, user, pendingTransfer }: Props) {
         <Link className="btn" href={`/transfers?t=${pendingTransfer.id}`}>
           Review transfer
         </Link>
+      ) : null}
+      {g && !openReturn && (a.status === "ASSIGNED" || a.status === "UNDER_MAINTENANCE") ? (
+        <ConfirmButton
+          action={requestReturnAction.bind(null, a.id)}
+          title="Request this asset back?"
+          description={`${g.employee.name} is asked to return it. The asset stays assigned until you receive it.`}
+          confirmLabel="Request return"
+          success="Return requested"
+        >
+          Request return
+        </ConfirmButton>
       ) : null}
       {g?.handoverStatus === "DISPUTED" ? (
         <ConfirmButton

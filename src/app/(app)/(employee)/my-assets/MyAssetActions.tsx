@@ -24,6 +24,16 @@ export function MyAssetActions({
       <Link className="btn" href={`/report-issue?asset=${assetId}`}>
         Report issue
       </Link>
+      {canMove ? (
+        <>
+          <Link className="btn" href={`/my-requests?new=1&type=RETURN&asset=${assetId}`}>
+            Request return
+          </Link>
+          <Link className="btn" href={`/my-requests?new=1&type=REPLACEMENT&asset=${assetId}`}>
+            Request replacement
+          </Link>
+        </>
+      ) : null}
       {pendingTransferNo ? (
         <span className="pill s-wait" style={{ alignSelf: "center" }}>
           {pendingTransferNo} waiting for approval

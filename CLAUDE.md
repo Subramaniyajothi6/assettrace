@@ -48,6 +48,9 @@ light/dark theme via next-themes). Never fall back to default shadcn slate look.
 - `npm run dev` · `npm run build` · `npm run lint`
 - `npx prisma migrate dev` · `npx prisma db seed` · `npx prisma studio`
 
+## Commits
+One commit per PLAN.md phase. Messages describe the change only: no Co-Authored-By lines, no tool or AI attribution.
+
 ## Definition of done for every phase
 `npm run build` passes with zero type errors, `npm run lint` clean, feature manually
 checked as all three demo users, and a git commit with a clear message.

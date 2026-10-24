@@ -115,3 +115,20 @@
   .mobile-menu-nav a:hover { background: var(--at-chip); }
   .mobile-menu-nav a[aria-current="page"] { background: var(--at-on); color: var(--at-on-ink); }
 }
+
+@layer components {
+  .f.has-err .inp { border-color: #B4232F; }
+  .modal { background: var(--at-card); color: var(--at-ink); border-radius: var(--at-r); padding: 24px; max-width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; }
+  .modal.wide { max-width: min(760px, calc(100vw - 32px)); }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .form-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  select.inp { appearance: auto; }
+  .skel { background: var(--at-chip); border-radius: var(--at-r2); animation: skel 1.4s ease-in-out infinite; }
+  @keyframes skel { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .toolbar select.inp { width: auto; min-width: 150px; height: 44px; border-radius: var(--at-pill); }
+  .pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--at-line); flex-wrap: wrap; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 2px; background: var(--at-card); border-radius: var(--at-pill); padding: 5px; box-shadow: var(--at-shadow); border: var(--at-bw) solid var(--at-bc); width: fit-content; max-width: 100%; overflow-x: auto; }
+  .tabs a { height: 38px; padding: 0 16px; border-radius: var(--at-pill); color: var(--at-ink); font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; }
+  .tabs a[aria-current="page"] { background: var(--at-on); color: var(--at-on-ink); }
+}

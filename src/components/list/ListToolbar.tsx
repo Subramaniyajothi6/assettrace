@@ -1,0 +1,79 @@
+"use client";
+
+import { useEffect, useRef, useState, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Search, X } from "lucide-react";
+
+export type FilterDef = { key: string; label: string; options: { value: string; label: string }[] };
+
+/** Search box + filter selects that live in the URL (so lists are shareable and server-rendered). */
+export function ListToolbar({ placeholder = "Search", filters = [], children }: { placeholder?: string; filters?: FilterDef[]; children?: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const sp = useSearchParams();
+  const [q, setQ] = useState(sp.get("q") ?? "");
+  const [, start] = useTransition();
+  const first = useRef(true);
+
+  const push = (updates: Record<string, string | null>) => {
+    const next = new URLSearchParams(sp.toString());
+    for (const [k, v] of Object.entries(updates)) {
+      if (v) next.set(k, v);
+      else next.delete(k);
+    }
+    next.delete("page");
+    const qs = next.toString();
+    start(() => router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false }));
+  };
+
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const t = setTimeout(() => push({ q: q.trim() || null }), 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
+
+  const active = filters.some((f) => sp.get(f.key)) || !!sp.get("q");
+
+  return (
+    <div className="toolbar rise">
+      <label className="search">
+        <Search size={18} aria-hidden="true" />
+        <span className="sr">{placeholder}</span>
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} />
+      </label>
+      {filters.map((f) => (
+        <select
+          key={f.key}
+          className="inp"
+          aria-label={f.label}
+          value={sp.get(f.key) ?? ""}
+          onChange={(e) => push({ [f.key]: e.target.value || null })}
+        >
+          <option value="">{f.label}: all</option>
+          {f.options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      ))}
+      {active ? (
+        <button
+          type="button"
+          className="btn sm"
+          onClick={() => {
+            setQ("");
+            push(Object.fromEntries([["q", null], ...filters.map((f) => [f.key, null])]));
+          }}
+        >
+          <X size={14} /> Clear
+        </button>
+      ) : null}
+      {children}
+    </div>
+  );
+}

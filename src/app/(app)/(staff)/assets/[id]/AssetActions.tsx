@@ -32,6 +32,11 @@ export async function AssetActions({ asset: a, user, pendingTransfer, openReturn
           Assign
         </Link>
       ) : null}
+      {["AVAILABLE", "ASSIGNED", "DAMAGED", "UNDER_MAINTENANCE"].includes(a.status) ? (
+        <Link className="btn" href={`/maintenance?asset=${a.id}`}>
+          Record maintenance
+        </Link>
+      ) : null}
       {canTransfer ? <TransferDialog assetId={a.id} employees={employees} locations={locations} currentLocationId={a.locationId} /> : null}
       {pendingTransfer ? (
         <Link className="btn" href={`/transfers?t=${pendingTransfer.id}`}>

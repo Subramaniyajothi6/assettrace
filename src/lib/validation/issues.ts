@@ -36,3 +36,34 @@ export const updateRequestSchema = z.object({
   status: enumOf(REQUEST_STATUSES, "a status"),
   managerRemarks: optText(1000),
 });
+
+const blankToUndef = (v: unknown) => (v === "" ? undefined : v);
+const money = () => z.preprocess((v) => (v === "" || v == null ? 0 : v), z.coerce.number({ error: "Enter a number" }).min(0, "Can't be negative"));
+
+export const maintenanceSchema = z
+  .object({
+    assetId: id("an asset"),
+    issueId: z.preprocess(blankToUndef, z.string().optional()).transform((v) => v ?? null),
+    type: enumOf(MAINTENANCE_TYPES, "a type"),
+    problem: text("Problem", 500),
+    serviceProvider: optText(120),
+    serviceDate: z.preprocess(blankToUndef, z.coerce.date({ error: "Service date is required" })),
+    cost: money(),
+    expectedCompletion: optDate(),
+    partsReplaced: optText(300),
+    technicianNotes: optText(1000),
+    warrantyCovered: z.preprocess((v) => v === "on" || v === "true", z.boolean()),
+  })
+  .superRefine((v, ctx) => {
+    if (v.expectedCompletion && v.expectedCompletion < v.serviceDate) {
+      ctx.addIssue({ code: "custom", path: ["expectedCompletion"], message: "Expected completion must be after the service date" });
+    }
+  });
+
+export const completeMaintenanceSchema = z.object({
+  actualCompletion: z.preprocess(blankToUndef, z.coerce.date({ error: "Completion date is required" })),
+  cost: money(),
+  partsReplaced: optText(300),
+  technicianNotes: optText(1000),
+  outcome: z.enum(["FIXED", "NOT_REPAIRABLE"], { error: "Choose the outcome" }),
+});

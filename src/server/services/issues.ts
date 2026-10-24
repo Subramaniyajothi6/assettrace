@@ -125,6 +125,20 @@ export async function closeIssue(issueId: string) {
   return prisma.$transaction((tx) => setIssueStatus(tx, user.id, issue, "CLOSED"));
 }
 
+/** Used when maintenance is recorded against an open issue. */
+export async function markIssueInMaintenanceTx(tx: Tx, actorId: string, issueId: string) {
+  const issue = await tx.assetIssue.findUnique({ where: { id: issueId } });
+  if (!issue || issue.status === "MAINTENANCE" || issue.status === "RESOLVED" || issue.status === "CLOSED") return;
+  await setIssueStatus(tx, actorId, issue, "MAINTENANCE");
+}
+
+/** Used when a maintenance record is cancelled: the issue goes back to review. */
+export async function reopenIssueReviewTx(tx: Tx, actorId: string, issueId: string) {
+  const issue = await tx.assetIssue.findUnique({ where: { id: issueId } });
+  if (!issue || issue.status !== "MAINTENANCE") return;
+  await setIssueStatus(tx, actorId, issue, "UNDER_REVIEW");
+}
+
 /** Used by maintenance completion: resolve the linked issue. */
 export async function resolveIssueFromMaintenanceTx(tx: Tx, actorId: string, issueId: string, resolution: string) {
   const issue = await tx.assetIssue.findUnique({ where: { id: issueId } });

@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { daysUntil } from "@/components/WarrantyCell";
 import { formatDate, rupee } from "@/lib/format";
 import { CONDITION_LABELS, HANDOVER_LABELS } from "@/lib/labels";
+import { employeeOptions, locationOptions } from "@/server/queries/people";
 import { MyAssetActions } from "./MyAssetActions";
 
 export const metadata = { title: "My assets" };
@@ -24,11 +25,13 @@ export default async function MyAssetsPage() {
               category: { select: { name: true } },
               returns: { where: { status: { in: ["REQUESTED", "RECEIVED"] } }, select: { id: true, status: true } },
               maintenance: { where: { status: { in: ["SCHEDULED", "IN_PROGRESS"] } }, select: { serviceProvider: true, expectedCompletion: true } },
+              transfers: { where: { status: "REQUESTED" }, select: { transferNo: true } },
             },
           },
         },
       })
     : [];
+  const [employees, locations] = assignments.length ? await Promise.all([employeeOptions(user.employeeId), locationOptions()]) : [[], []];
   const total = assignments.reduce((s, g) => s + Number(g.asset.purchaseCost ?? 0), 0);
 
   return (
@@ -115,7 +118,14 @@ export default async function MyAssetsPage() {
                     Review and sign
                   </Link>
                 ) : null}
-                <MyAssetActions assetId={a.id} canReturn={g.handoverStatus === "CONFIRMED" && !ret && a.status === "ASSIGNED"} />
+                <MyAssetActions
+                  assetId={a.id}
+                  canMove={g.handoverStatus === "CONFIRMED" && !ret && a.status === "ASSIGNED"}
+                  pendingTransferNo={a.transfers[0]?.transferNo ?? null}
+                  employees={employees}
+                  locations={locations}
+                  locationId={a.locationId}
+                />
                 <Link className="btn" href="/my-history">
                   View history
                 </Link>

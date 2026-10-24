@@ -31,3 +31,13 @@ export const PNG_1PX = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
   "base64",
 );
+
+/** Draw a squiggle on the handover signature pad. */
+export async function sign(page: Page) {
+  const pad = page.getByRole("img", { name: /Signature pad/ });
+  const box = (await pad.boundingBox())!;
+  await page.mouse.move(box.x + 40, box.y + 60);
+  await page.mouse.down();
+  for (let i = 1; i <= 10; i++) await page.mouse.move(box.x + 40 + i * 25, box.y + 60 + (i % 2) * 30);
+  await page.mouse.up();
+}

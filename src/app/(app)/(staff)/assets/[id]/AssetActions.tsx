@@ -3,6 +3,8 @@ import type { CurrentUser } from "@/server/permissions";
 import type { AssetDetail } from "@/server/queries/assets";
 import { ConfirmButton } from "@/components/forms/ConfirmButton";
 import { reopenHandoverAction } from "@/actions/assignments";
+import { TransferDialog } from "@/components/TransferDialog";
+import { employeeOptions, locationOptions } from "@/server/queries/people";
 
 type Props = {
   asset: AssetDetail;
@@ -12,11 +14,13 @@ type Props = {
 };
 
 /** Lifecycle buttons for the asset page; each shows only when the state machine allows it. */
-export function AssetActions({ asset: a, user }: Props) {
+export async function AssetActions({ asset: a, user, pendingTransfer }: Props) {
   if (a.status === "RETIRED") return null;
   const manages = user.role === "ADMIN" || (!!a.departmentId && user.managedDepartmentIds.includes(a.departmentId));
   if (!manages) return null;
   const g = a.assignments.find((x) => x.isActive);
+  const canTransfer = a.status === "ASSIGNED" && !pendingTransfer && g?.handoverStatus === "CONFIRMED";
+  const [employees, locations] = canTransfer ? await Promise.all([employeeOptions(a.currentHolderId), locationOptions()]) : [[], []];
   return (
     <>
       <Link className="btn" href={`/assets/${a.id}/edit`}>
@@ -25,6 +29,12 @@ export function AssetActions({ asset: a, user }: Props) {
       {a.status === "AVAILABLE" || a.status === "RESERVED" ? (
         <Link className="btn pri" href={`/assignments/new?asset=${a.id}`}>
           Assign
+        </Link>
+      ) : null}
+      {canTransfer ? <TransferDialog assetId={a.id} employees={employees} locations={locations} currentLocationId={a.locationId} /> : null}
+      {pendingTransfer ? (
+        <Link className="btn" href={`/transfers?t=${pendingTransfer.id}`}>
+          Review transfer
         </Link>
       ) : null}
       {g?.handoverStatus === "DISPUTED" ? (

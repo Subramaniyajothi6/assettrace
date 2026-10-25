@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { PNG_1PX, db, login, toast } from "./helpers";
+import { PNG_1PX, db, login, toast, resetDemoData } from "./helpers";
+
+test.beforeAll(() => resetDemoData());
 
 test("receive a return, blocked from assignment until inspected, inspect → available", async ({ page }) => {
   const r = await db.assetReturn.findUniqueOrThrow({ where: { returnNo: "RET-0014" }, include: { request: true } });

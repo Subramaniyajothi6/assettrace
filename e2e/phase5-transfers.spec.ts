@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { db, login, sign, toast } from "./helpers";
+import { db, login, sign, toast, resetDemoData } from "./helpers";
+
+test.beforeAll(() => resetDemoData());
 
 test("employee requests a transfer → manager approves → new holder signs → completed", async ({ browser }) => {
   const a = await db.asset.findUniqueOrThrow({ where: { assetTag: "AST-HEA-0001" } });

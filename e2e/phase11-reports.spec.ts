@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import * as XLSX from "xlsx";
-import { db, login } from "./helpers";
+import { db, login, resetDemoData } from "./helpers";
+
+test.beforeAll(() => resetDemoData());
 
 async function managerScope() {
   const mgr = await db.user.findUniqueOrThrow({ where: { email: "manager@assettrace.dev" }, include: { managedDepartments: true } });

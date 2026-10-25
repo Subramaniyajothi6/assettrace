@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { PNG_1PX, db, login, toast } from "./helpers";
+import { PNG_1PX, db, login, toast, resetDemoData } from "./helpers";
+
+test.beforeAll(() => resetDemoData());
 
 test("employee reports an issue → manager reviews and sends it to maintenance", async ({ browser }) => {
   const a = await db.asset.findUniqueOrThrow({ where: { assetTag: "AST-HEA-0001" } });

@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { db, login, toast } from "./helpers";
+import { db, login, toast, resetDemoData } from "./helpers";
+
+test.beforeAll(() => resetDemoData());
 
 test("completing a repair returns the asset to its holder and resolves the issue", async ({ page }) => {
   const m = await db.maintenanceRecord.findUniqueOrThrow({ where: { maintenanceNo: "MNT-0015" } });

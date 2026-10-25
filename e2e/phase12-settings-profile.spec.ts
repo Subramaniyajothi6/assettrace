@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { db, login, toast, uid } from "./helpers";
+import { db, login, toast, uid, resetDemoData } from "./helpers";
+
+test.beforeAll(() => resetDemoData());
 
 test("admin saves settings; bad prefix shows a field error", async ({ page }) => {
   await login(page, "admin");

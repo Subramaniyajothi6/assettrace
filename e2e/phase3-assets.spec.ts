@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { PNG_1PX, db, login, toast, uid } from "./helpers";
+import { PNG_1PX, db, login, toast, uid, resetDemoData } from "./helpers";
+
+test.beforeAll(() => resetDemoData());
 
 test("manager registers a laptop with a photo, then edits it", async ({ page }) => {
   await login(page, "manager");
@@ -76,7 +78,7 @@ test("QR scan access: holder sees match, others see no details", async ({ page }
   // manual entry
   await page.goto("/scan");
   await page.getByLabel("Or type the asset ID").fill(mine.assetTag);
-  await page.getByRole("button", { name: "Open" }).click();
+  await page.getByRole("button", { name: "Open", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/scan/${mine.qrToken}`));
 });
 

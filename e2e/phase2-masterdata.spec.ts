@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { login, toast, uid } from "./helpers";
+import { login, toast, uid, resetDemoData } from "./helpers";
+
+test.beforeAll(() => resetDemoData());
 
 test("admin manages departments: add, duplicate error, edit, deactivate", async ({ page }) => {
   await login(page, "admin");

@@ -46,3 +46,12 @@ export async function sign(page: Page) {
   for (let i = 1; i <= 10; i++) await page.mouse.move(box.x + 40 + i * 25, box.y + 60 + (i % 2) * 30);
   await page.mouse.up();
 }
+
+import { execSync } from "child_process";
+/**
+ * Every spec file starts from the seeded demo data (the tests change it).
+ * Call from `test.beforeAll` at the top of each file.
+ */
+export function resetDemoData() {
+  execSync("npx prisma db seed", { stdio: "ignore", timeout: 300_000 });
+}

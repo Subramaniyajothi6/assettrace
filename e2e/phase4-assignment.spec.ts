@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
-import { db, login, toast } from "./helpers";
+import { db, login, toast, resetDemoData } from "./helpers";
+
+test.beforeAll(() => resetDemoData());
 
 async function assign(page: Page, assetTag: string, employee: string) {
   const a = await db.asset.findUniqueOrThrow({ where: { assetTag } });

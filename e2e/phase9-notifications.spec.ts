@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { db, login, toast } from "./helpers";
+import { db, login, toast, resetDemoData } from "./helpers";
+
+test.beforeAll(() => resetDemoData());
 
 test("bell shows unread, opening an item marks it read and follows the link", async ({ page }) => {
   await login(page, "employee");

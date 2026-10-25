@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { db, login } from "./helpers";
+import { db, login, resetDemoData } from "./helpers";
+
+test.beforeAll(() => resetDemoData());
 
 test("manager dashboard is scoped; admin sees everything", async ({ page, browser }) => {
   const mgr = await db.user.findUniqueOrThrow({ where: { email: "manager@assettrace.dev" }, include: { managedDepartments: true } });

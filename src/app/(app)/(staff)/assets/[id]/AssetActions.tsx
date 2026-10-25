@@ -4,6 +4,8 @@ import type { AssetDetail } from "@/server/queries/assets";
 import { ConfirmButton } from "@/components/forms/ConfirmButton";
 import { reopenHandoverAction } from "@/actions/assignments";
 import { requestReturnAction } from "@/actions/requests";
+import { markFoundAction } from "@/actions/returns";
+import { MarkLost } from "./MarkLost";
 import { TransferDialog } from "@/components/TransferDialog";
 import { employeeOptions, locationOptions } from "@/server/queries/people";
 
@@ -22,6 +24,10 @@ export async function AssetActions({ asset: a, user, pendingTransfer, openReturn
   const g = a.assignments.find((x) => x.isActive);
   const canTransfer = a.status === "ASSIGNED" && !pendingTransfer && g?.handoverStatus === "CONFIRMED";
   const [employees, locations] = canTransfer ? await Promise.all([employeeOptions(a.currentHolderId), locationOptions()]) : [[], []];
+  // RETURNED assets can be retired only after inspection (no open return left means it was inspected).
+  const canRetire =
+    !a.currentHolderId &&
+    (["AVAILABLE", "DAMAGED", "LOST", "UNDER_MAINTENANCE"].includes(a.status) || (a.status === "RETURNED" && !openReturn));
   return (
     <>
       <Link className="btn" href={`/assets/${a.id}/edit`}>
@@ -63,6 +69,33 @@ export async function AssetActions({ asset: a, user, pendingTransfer, openReturn
           success="Handover reopened"
         >
           Resolve dispute
+        </ConfirmButton>
+      ) : null}
+      {openReturn?.status === "REQUESTED" ? (
+        <Link className="btn pri" href={`/returns/${openReturn.id}/receive`}>
+          Receive return
+        </Link>
+      ) : null}
+      {a.status === "RETURNED" && openReturn?.status === "RECEIVED" ? (
+        <Link className="btn pri" href={`/returns/${openReturn.id}/inspect`}>
+          Inspect
+        </Link>
+      ) : null}
+      {canRetire ? (
+        <Link className="btn ghost-danger" href={`/assets/${a.id}/retire`}>
+          Retire
+        </Link>
+      ) : null}
+      {a.status === "ASSIGNED" || a.status === "AVAILABLE" ? <MarkLost assetId={a.id} tag={a.assetTag} holder={g?.employee.name ?? null} /> : null}
+      {a.status === "LOST" ? (
+        <ConfirmButton
+          action={markFoundAction.bind(null, a.id)}
+          title={`Mark ${a.assetTag} found?`}
+          description="It goes back to Available."
+          confirmLabel="Mark found"
+          success={`${a.assetTag} is back and available`}
+        >
+          Mark found
         </ConfirmButton>
       ) : null}
     </>

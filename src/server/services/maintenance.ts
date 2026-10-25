@@ -23,6 +23,8 @@ export type StartMaintenanceInput = {
   warrantyCovered?: boolean;
   expectedCompletion?: Date | null;
   issueId?: string | null;
+  /** Only the return inspection may send a RETURNED asset to repair (ARCHITECTURE.md §4 rule 3). */
+  fromInspection?: boolean;
 };
 
 /**
@@ -31,7 +33,9 @@ export type StartMaintenanceInput = {
  * A RETURNED asset must be inspected first; an asset already in maintenance keeps its original statusBefore.
  */
 export async function startMaintenanceTx(tx: Tx, asset: Asset, actorId: string, input: StartMaintenanceInput) {
-  if (asset.status === "RETURNED") throw new AppError("Inspect the returned asset first. The inspection decides whether it needs repair.");
+  if (asset.status === "RETURNED" && !input.fromInspection) {
+    throw new AppError("Inspect the returned asset first. The inspection decides whether it needs repair.");
+  }
   if (asset.status === "RETIRED") throw new AppError("Retired assets are read-only.");
   const already = asset.status === "UNDER_MAINTENANCE";
   if (!already) assertTransition(asset.status, "UNDER_MAINTENANCE");

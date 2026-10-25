@@ -12,7 +12,8 @@ export async function login(page: Page, who: keyof typeof USERS) {
   await page.getByLabel("Work email").fill(USERS[who].email);
   await page.getByLabel("Password").fill(USERS[who].password);
   await page.getByRole("button", { name: /^Sign in/ }).click();
-  await expect(page).not.toHaveURL(/\/login/);
+  // First sign-in after a dev-server start compiles several routes.
+  await expect(page).not.toHaveURL(/\/login/, { timeout: 60_000 });
 }
 
 /** Wait for a sonner toast containing `text`. */

@@ -4,6 +4,8 @@ import { prisma } from "../db";
 import { managedAssetScope, requestScope, type CurrentUser } from "../permissions";
 
 const DAY = 864e5;
+/** Order of segments in the location status bars (in use first, problems last). */
+const STATUS_ORDER: AssetStatus[] = ["ASSIGNED", "AVAILABLE", "UNDER_MAINTENANCE", "RESERVED", "RETURNED", "DAMAGED", "LOST"];
 const WEEKS = 9;
 const WEEK = 7 * DAY;
 const MONTHS = 12;
@@ -81,11 +83,11 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
       orderBy: { createdAt: "asc" },
       select: { id: true, event: true, description: true, createdAt: true, asset: { select: { name: true } } },
     }),
-    prisma.asset.findMany({
+    prisma.asset.groupBy({
+      by: ["locationId", "status"],
       where: { AND: [scope, { status: { not: "RETIRED" } }] },
-      select: { id: true, assetTag: true, name: true, status: true, locationId: true, purchaseCost: true },
-      orderBy: { assetTag: "asc" },
-      take: 600,
+      _count: { _all: true },
+      _sum: { purchaseCost: true },
     }),
     prisma.$queryRaw<{ m: string; total: number }[]>`
       SELECT to_char(date_trunc('month', mr."serviceDate" AT TIME ZONE ${TZ}), 'YYYY-MM') AS m, COALESCE(SUM(mr.cost), 0)::float AS total
@@ -134,18 +136,22 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
   const months = lastMonths(MONTHS);
   const series = <T extends { m: string }>(rows: T[], pick: (r: T) => number, ms = months) => ms.map((m) => ({ label: m.label, value: pick(rows.find((r) => r.m === m.key) ?? ({} as T)) || 0 }));
 
-  // "Where your assets are": per-location squares + stats.
+  // "Where your assets are": per-location status breakdown (stacked bar) + stats.
   const locCards = locations
     .map((l) => {
-      const list = locationAssets.filter((a) => a.locationId === l.id);
+      const rows = locationAssets.filter((r) => r.locationId === l.id);
+      const total = rows.reduce((n, r) => n + r._count._all, 0);
+      const inUse = rows.find((r) => r.status === "ASSIGNED")?._count._all ?? 0;
       return {
         ...l,
-        assets: list.map((a) => ({ id: a.id, tag: a.assetTag, name: a.name, status: a.status })),
-        inUse: list.filter((a) => a.status === "ASSIGNED").length,
-        value: list.reduce((s, a) => s + Number(a.purchaseCost ?? 0), 0),
+        total,
+        inUse,
+        inUsePct: total ? Math.round((inUse / total) * 100) : 0,
+        value: rows.reduce((s, r) => s + Number(r._sum.purchaseCost ?? 0), 0),
+        statuses: STATUS_ORDER.map((status) => ({ status, count: rows.find((r) => r.status === status)?._count._all ?? 0 })).filter((s) => s.count),
       };
     })
-    .filter((l) => l.assets.length);
+    .filter((l) => l.total);
 
   return {
     total,

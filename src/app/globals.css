@@ -151,3 +151,10 @@
   .hero-dark.kpi { color: var(--at-hd-ink); }
   .hero-blue.kpi { color: var(--at-hb-ink); }
 }
+
+@layer components {
+  /* Dashboard "Where your assets are": one stacked status bar per location. */
+  .loc-bar { display: flex; gap: 2px; height: 14px; border-radius: 7px; overflow: hidden; background: var(--at-chip); transform-origin: left; animation: slide .9s cubic-bezier(.2,.7,.2,1) both; }
+  .loc-bar a { display: block; min-width: 4px; transition: filter .2s; }
+  .loc-bar a:hover { filter: brightness(1.15); }
+}

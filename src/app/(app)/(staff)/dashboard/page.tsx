@@ -40,7 +40,6 @@ export default async function DashboardPage() {
   const now = new Date();
   const toProcess = actions.filter((a) => a.tag === "RET" || a.tag === "INS").length;
   const urgent = actions.filter((a) => a.tag === "!").length;
-  const legend = (["ASSIGNED", "AVAILABLE", "UNDER_MAINTENANCE", "RESERVED", "RETURNED", "DAMAGED", "LOST"] as const).filter((s) => d.statusDistribution.some((x) => x.status === s));
 
   return (
     <>
@@ -195,18 +194,13 @@ export default async function DashboardPage() {
         <section className="card pad main-col rise" style={{ animationDelay: "420ms", display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
             <h2 className="h2">Where your assets are</h2>
-            <div className="gap8" style={{ fontSize: 13, color: "var(--at-soft)", gap: 14 }}>
-              {legend.map((s) => (
-                <span key={s} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <i style={{ width: 10, height: 10, borderRadius: 3, background: STATUS_COLORS[s] }} aria-hidden="true" />
-                  {STATUS_LABELS[s]}
-                </span>
-              ))}
-            </div>
+            <small className="muted">
+              {d.locations.reduce((n, l) => n + l.total, 0)} active assets across {d.locations.length} location{d.locations.length === 1 ? "" : "s"}
+            </small>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16 }}>
             {d.locations.map((l, li) => (
-              <div key={l.id} className="card pad-s lift" style={{ borderTop: `4px solid ${["#3A6BB8", "#D2643E", "#2E7D4F"][li % 3]}`, display: "flex", flexDirection: "column", gap: 12 }}>
+              <div key={l.id} className="card pad-s lift" style={{ borderTop: `4px solid ${["#3A6BB8", "#D2643E", "#2E7D4F"][li % 3]}`, display: "flex", flexDirection: "column", gap: 14 }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   <span className="ico" style={{ fontSize: 12, fontWeight: 700 }}>
                     {l.code}
@@ -216,23 +210,40 @@ export default async function DashboardPage() {
                     <small className="muted">{l.address}</small>
                   </span>
                 </div>
-                <div className="cells" role="img" aria-label={`${l.name}: ${l.assets.length} assets by status`}>
-                  {l.assets.map((a, i) => (
-                    <Link key={a.id} href={`/assets/${a.id}`} title={`${a.tag} · ${a.name} · ${STATUS_LABELS[a.status]}`}>
-                      <i style={{ background: STATUS_COLORS[a.status], animationDelay: `${550 + li * 100 + i * 7}ms` }} />
+                <div
+                  className="loc-bar"
+                  role="img"
+                  aria-label={`${l.name}: ${l.statuses.map((s) => `${s.count} ${STATUS_LABELS[s.status].toLowerCase()}`).join(", ")}`}
+                  style={{ animationDelay: `${550 + li * 100}ms` }}
+                >
+                  {l.statuses.map((s) => (
+                    <Link
+                      key={s.status}
+                      href={`/assets?location=${l.id}&status=${s.status}`}
+                      title={`${s.count} ${STATUS_LABELS[s.status].toLowerCase()} · ${Math.round((s.count / l.total) * 100)}%`}
+                      style={{ flex: `${s.count} 1 0`, background: STATUS_COLORS[s.status] }}
+                    />
+                  ))}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: "6px 12px", fontSize: 13 }}>
+                  {l.statuses.map((s) => (
+                    <Link key={s.status} href={`/assets?location=${l.id}&status=${s.status}`} style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none" }}>
+                      <i style={{ width: 9, height: 9, borderRadius: 3, background: STATUS_COLORS[s.status], flex: "none" }} aria-hidden="true" />
+                      {s.status === "UNDER_MAINTENANCE" ? "Maintenance" : STATUS_LABELS[s.status]}
+                      <b style={{ marginLeft: "auto" }}>{s.count}</b>
                     </Link>
                   ))}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 8, fontSize: 13 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 8, fontSize: 13, marginTop: "auto", paddingTop: 12, borderTop: "1px solid var(--at-line)" }}>
                   <span>
                     <span className="muted">Assets</span>
                     <br />
-                    <b style={{ fontSize: 16 }}>{l.assets.length}</b>
+                    <b style={{ fontSize: 16 }}>{l.total}</b>
                   </span>
                   <span>
                     <span className="muted">In use</span>
                     <br />
-                    <b style={{ fontSize: 16 }}>{l.inUse}</b>
+                    <b style={{ fontSize: 16 }}>{l.inUsePct}%</b>
                   </span>
                   <span>
                     <span className="muted">Value</span>

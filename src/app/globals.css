@@ -141,3 +141,7 @@
 @layer components {
   .chip[aria-checked="true"] { background: var(--at-on); color: var(--at-on-ink); border-color: var(--at-on); }
 }
+
+@layer components {
+  .bell-pop { width: min(380px, calc(100vw - 24px)); background: var(--at-card); color: var(--at-ink); border-radius: var(--at-r2); padding: 10px; box-shadow: 0 18px 40px rgba(0,0,0,.18); border: 1px solid var(--at-line); }
+}

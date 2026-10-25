@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/server/permissions";
 import { getSettings } from "@/server/settings";
 import { getStaffKpis } from "@/server/queries/dashboard";
+import { checkWarranties } from "@/server/services/notifications";
 import { KpiCard } from "@/components/KpiCard";
 import { firstName, greeting, longDay } from "@/lib/format";
 
@@ -10,6 +11,8 @@ export const metadata = { title: "Dashboard" };
 export default async function DashboardPage() {
   const user = await requireUser();
   const settings = await getSettings();
+  // Warranty alerts without a paid cron: idempotent check on dashboard load (ARCHITECTURE.md §5).
+  await checkWarranties(user).catch((e) => console.error("warranty check failed", e));
   const k = await getStaffKpis(user, settings.warrantyAlertDays);
 
   const todo = [

@@ -26,6 +26,7 @@ import { logoutAction } from "@/actions/auth";
 import { ROLE_LABELS } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { NAV, RAIL, homeFor, isActive, type BadgeKey, type RailIcon } from "./nav";
+import { NotificationBell } from "./NotificationBell";
 
 type Props = {
   role: Role;
@@ -97,10 +98,7 @@ export function AppShell({ role, name, scopeLabel, badges, unread, allowDark, ch
           </nav>
 
           <div className="tright">
-            <Link className="iconbtn" href="/notifications" aria-label={`Notifications, ${unread} unread`}>
-              <Bell size={19} strokeWidth={1.8} />
-              {unread ? <span className="dot" /> : null}
-            </Link>
+            <NotificationBell initialUnread={unread} />
             <Link className="me" href="/profile" aria-label="Profile">
               <Initials name={name} />
               <span>

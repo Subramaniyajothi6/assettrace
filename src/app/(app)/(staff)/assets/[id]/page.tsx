@@ -2,7 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
-import { Lock, TriangleAlert, Undo2, Check, Laptop } from "lucide-react";
+import { Lock, TriangleAlert, Undo2, Check } from "lucide-react";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { requireUser } from "@/server/permissions";
 import { getSettings } from "@/server/settings";
 import { getAssetDetail, type AssetDetail } from "@/server/queries/assets";
@@ -111,7 +112,7 @@ export default async function AssetPage({ params, searchParams }: { params: Prom
               <Image className="asset-photo" src={fileUrl(a.photoPath)} alt={`Photo of ${a.name}`} width={480} height={170} unoptimized />
             ) : (
               <div style={{ height: 170, background: "var(--at-chip)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, color: "var(--at-muted)", fontSize: 13 }}>
-                <Laptop size={52} />
+                <CategoryIcon code={a.category.code} name={a.category.name} size={52} boxed={false} />
                 No photo
               </div>
             )}

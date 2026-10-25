@@ -226,7 +226,7 @@ export async function getEmployeeSummary(userId: string, employeeId: string | nu
         handoverStatus: true,
         accessories: true,
         assignedAt: true,
-        asset: { select: { id: true, name: true, assetTag: true, status: true } },
+        asset: { select: { id: true, name: true, assetTag: true, status: true, category: { select: { name: true, code: true } } } },
       },
       orderBy: { assignedAt: "desc" },
     }),

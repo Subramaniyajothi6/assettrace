@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Laptop } from "lucide-react";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { prisma } from "@/server/db";
 import { requireUser } from "@/server/permissions";
 import { PageHeader } from "@/components/PageHeader";
@@ -22,7 +22,7 @@ export default async function MyAssetsPage() {
         include: {
           asset: {
             include: {
-              category: { select: { name: true } },
+              category: { select: { name: true, code: true } },
               returns: { where: { status: { in: ["REQUESTED", "RECEIVED"] } }, select: { id: true, status: true } },
               maintenance: { where: { status: { in: ["SCHEDULED", "IN_PROGRESS"] } }, select: { serviceProvider: true, expectedCompletion: true } },
               transfers: { where: { status: "REQUESTED" }, select: { transferNo: true } },
@@ -75,7 +75,7 @@ export default async function MyAssetsPage() {
             <article key={g.id} className="card pad rise" style={{ animationDelay: `${80 + i * 70}ms`, display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 18, alignItems: "center" }}>
                 <span className="ico" style={{ width: 64, height: 64 }}>
-                  <Laptop size={28} />
+                  <CategoryIcon code={a.category.code} name={a.category.name} size={28} boxed={false} />
                 </span>
                 <span style={{ flex: "1 1 240px" }}>
                   <b style={{ fontSize: 20 }}>{a.name}</b>

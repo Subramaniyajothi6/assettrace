@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, Laptop, TriangleAlert } from "lucide-react";
+import { Check, TriangleAlert } from "lucide-react";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { prisma } from "@/server/db";
 import { requireUser } from "@/server/permissions";
 import { PageHeader } from "@/components/PageHeader";
@@ -17,7 +18,7 @@ export default async function HandoverPage({ params }: { params: Promise<{ assig
   const g = await prisma.assignment.findUnique({
     where: { id: assignmentId },
     include: {
-      asset: { include: { category: { select: { name: true } }, location: { select: { name: true } } } },
+      asset: { include: { category: { select: { name: true, code: true } }, location: { select: { name: true } } } },
       assignedBy: { select: { name: true } },
       employee: { select: { name: true } },
     },
@@ -52,7 +53,7 @@ export default async function HandoverPage({ params }: { params: Promise<{ assig
       <div className="row">
         <section className="card side rise" style={{ overflow: "hidden" }}>
           <div style={{ height: 170, background: "var(--at-chip)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--at-muted)" }}>
-            <Laptop size={56} />
+            <CategoryIcon code={a.category.code} name={a.category.name} size={56} boxed={false} />
           </div>
           <div style={{ padding: "20px 22px" }}>
             <span className="tag">{a.assetTag}</span>

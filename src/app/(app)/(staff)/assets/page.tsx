@@ -10,6 +10,7 @@ import { TableCard } from "@/components/list/TableCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Initials } from "@/components/Initials";
 import { WarrantyCell } from "@/components/WarrantyCell";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { CONDITION_LABELS, STATUS_LABELS } from "@/lib/labels";
 import { param, type SearchParams } from "@/lib/list";
 
@@ -92,6 +93,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
         head={
           <>
             <th>Asset</th>
+            <th>Category</th>
             <th>Serial no.</th>
             <th>Status</th>
             <th>With</th>
@@ -108,9 +110,17 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
         rows={rows.map((a, i) => (
           <tr key={a.id} style={{ animationDelay: `${Math.min(i * 35, 700)}ms` }}>
             <td>
-              <Link className="cell" href={`/assets/${a.id}`}>
-                <span>{a.name}</span>
-                <span className="tag">{a.assetTag}</span>
+              <Link className="cell" href={`/assets/${a.id}`} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                <CategoryIcon code={a.category.code} />
+                <span style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ fontWeight: 600 }}>{a.name}</span>
+                  <span className="tag">{a.assetTag}</span>
+                </span>
+              </Link>
+            </td>
+            <td>
+              <Link href={`/assets?category=${a.categoryId}`} style={{ color: "var(--at-soft)", textDecoration: "none" }} title={`Show all ${a.category.name.toLowerCase()} assets`}>
+                {a.category.name}
               </Link>
             </td>
             <td className="mono" style={{ fontSize: 12, color: "var(--at-soft)" }}>

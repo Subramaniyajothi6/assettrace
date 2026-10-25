@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Laptop } from "lucide-react";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { prisma } from "@/server/db";
 import { managedAssetScope, requireUser } from "@/server/permissions";
 import { PageHeader } from "@/components/PageHeader";
@@ -15,7 +15,7 @@ export default async function ReceivePage({ params }: { params: Promise<{ id: st
   const user = await requireUser();
   const r = await prisma.assetReturn.findFirst({
     where: { AND: [{ id }, { asset: managedAssetScope(user) }] },
-    include: { asset: true, returnedBy: { select: { name: true } }, assignment: true },
+    include: { asset: { include: { category: { select: { name: true, code: true } } } }, returnedBy: { select: { name: true } }, assignment: true },
   });
   if (!r) notFound();
   if (r.status !== "REQUESTED") {
@@ -47,7 +47,7 @@ export default async function ReceivePage({ params }: { params: Promise<{ id: st
       ) : null}
       <section className="card pad rise" style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
         <span className="ico" style={{ width: 56, height: 56 }}>
-          <Laptop size={26} />
+          <CategoryIcon code={a.category.code} name={a.category.name} size={26} boxed={false} />
         </span>
         <span style={{ flex: "1 1 220px" }}>
           <b style={{ fontSize: 20 }}>{a.name}</b>

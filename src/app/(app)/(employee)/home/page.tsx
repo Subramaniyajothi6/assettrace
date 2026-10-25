@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Laptop, PenLine } from "lucide-react";
+import { PenLine } from "lucide-react";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { requireUser } from "@/server/permissions";
 import { getEmployeeSummary } from "@/server/queries/dashboard";
 import { KpiCard } from "@/components/KpiCard";
@@ -90,7 +91,7 @@ export default async function HomePage() {
               s.assets.map((g) => (
                 <Link key={g.id} className="card pad-s lift" href="/my-assets" style={{ textDecoration: "none", color: "var(--at-ink)", display: "flex", flexDirection: "column", gap: 10 }}>
                   <span className="ico" style={{ width: 46, height: 46 }}>
-                    <Laptop size={22} />
+                    <CategoryIcon code={g.asset.category.code} name={g.asset.category.name} size={22} boxed={false} />
                   </span>
                   <b style={{ fontSize: 16 }}>{g.asset.name}</b>
                   <span className="tag">{g.asset.assetTag}</span>

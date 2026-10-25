@@ -465,7 +465,7 @@ async function main() {
     ["u-mgr", "WARRANTY_EXPIRING", "Warranty ends in 3 days", "Lenovo ThinkPad E14 · AST-LAP-0003", `/assets/${id["a3"]}`, d(0, 8)],
     ["u-mgr", "TRANSFER_REQUESTED", "Transfer requested", "LG 27UL500 from Meena Pillai to Kavya S", "/transfers", d(-2, 15, 10)],
     ["u-mgr", "GENERAL", "Maintenance overdue", "BenQ GW2790 was expected back 2 days ago", "/maintenance", d(-1, 9), true],
-    ["u-emp", "ASSET_ASSIGNED", "Dell P2422H assigned to you", "Please confirm and sign the handover", `/my-assets/handover/${id["ga16"]}`, d(0, 9, 40)],
+    ["u-emp", "ASSET_ASSIGNED", "Dell P2422H assigned to you", "Monitor · AST-MON-0001 · please confirm and sign the handover", `/my-assets/handover/${id["ga16"]}`, d(0, 9, 40)],
     ["u-emp", "ISSUE_STATUS_UPDATED", "Your laptop's repair started", "Lenovo Service Centre, Guindy · back in about 5 days", "/my-requests", d(-1, 16, 15)],
     ["u-admin", "GENERAL", "New employee without a login", "Divya Natarajan has no user account yet", "/admin/users", d(-1, 12)],
   ];

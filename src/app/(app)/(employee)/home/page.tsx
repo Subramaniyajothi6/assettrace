@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { PenLine } from "lucide-react";
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { requireUser } from "@/server/permissions";
 import { getEmployeeSummary } from "@/server/queries/dashboard";
@@ -56,13 +55,13 @@ export default async function HomePage() {
           style={{ background: "#1F4E95", color: "#FFFFFF", textDecoration: "none", animationDelay: "80ms" }}
         >
           <span className="ico" style={{ background: "#2F62AE", color: "#FFFFFF" }}>
-            <PenLine size={22} />
+            <CategoryIcon code={g.asset.category.code} name={g.asset.category.name} size={22} boxed={false} />
           </span>
           <span style={{ flex: "1 1 260px" }}>
             <b style={{ fontSize: 17 }}>Confirm you received the {g.asset.name}</b>
             <br />
             <small style={{ color: "#DCE6F6" }}>
-              Assigned {formatDate(g.assignedAt)} · {g.accessories.join(", ") || "no accessories"}
+              {g.asset.category.name} · {g.asset.assetTag} · Assigned {formatDate(g.assignedAt)} · {g.accessories.join(", ") || "no accessories"}
             </small>
           </span>
           <b>Review and sign →</b>

@@ -81,7 +81,7 @@ export default async function MyAssetsPage() {
                   <b style={{ fontSize: 20 }}>{a.name}</b>
                   <br />
                   <span className="tag">
-                    {a.assetTag} · {a.serialNumber ?? a.category.name}
+                    {a.category.name} · {a.assetTag}{a.serialNumber ? ` · ${a.serialNumber}` : ""}
                   </span>
                 </span>
                 {pill}

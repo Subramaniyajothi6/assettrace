@@ -72,11 +72,12 @@ export async function assignAsset(input: unknown) {
       description: `${STATUS_LABELS[asset.status]} → Assigned · ${employee.name}`,
       metadata: { assignmentId: assignment.id, employeeId: employee.id, accessories: data.accessories },
     });
+    const category = await tx.assetCategory.findUnique({ where: { id: asset.categoryId }, select: { name: true } });
     await createNotification(tx, {
       userIds: [employee.user?.id],
       type: "ASSET_ASSIGNED",
       title: `${asset.name} assigned to you`,
-      message: "Please confirm and sign the handover",
+      message: `${category?.name ?? "Asset"} · ${asset.assetTag} · please confirm and sign the handover`,
       link: `/my-assets/handover/${assignment.id}`,
     });
     // An open "new asset" request from this employee is now fulfilled.

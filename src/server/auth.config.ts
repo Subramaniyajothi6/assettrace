@@ -14,9 +14,9 @@ export const authConfig = {
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl;
       const loggedIn = !!auth?.user;
-      if (pathname === "/login") {
-        return loggedIn ? Response.redirect(new URL("/", request.nextUrl)) : true;
-      }
+      // Always allow /login. The page itself redirects only if the session's user is real and active;
+      // redirecting here on a stale cookie (deleted/deactivated user) would loop with requireUser().
+      if (pathname === "/login") return true;
       if (loggedIn) return true;
       const login = new URL("/login", request.nextUrl);
       if (pathname !== "/") login.searchParams.set("next", pathname + request.nextUrl.search);

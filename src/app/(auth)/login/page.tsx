@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Briefcase } from "lucide-react";
+import { getCurrentUser } from "@/server/permissions";
 import { prisma } from "@/server/db";
 import { getSettings } from "@/server/settings";
 import { STATUS_COLORS } from "@/lib/labels";
@@ -15,6 +17,8 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
+  // Already signed in with a valid, active account → go home. A stale cookie just shows the form.
+  if (await getCurrentUser()) redirect("/");
   const { orgName } = await getSettings();
   // Status colours only — no asset details are exposed before sign-in.
   const statuses = await prisma.asset.findMany({ select: { status: true }, orderBy: { createdAt: "asc" }, take: 90 });

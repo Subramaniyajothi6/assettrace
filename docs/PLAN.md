@@ -90,6 +90,9 @@ Paste each prompt below into Claude Code, in order. After each: `npm run build`,
 
 Deploy: Vercel → Import repo → add env vars → deploy → run `npx prisma migrate deploy` and seed against production DB → test all 3 logins on your phone.
 
+## Phase 13 — Enhancements (after Phases 0–12 are complete)
+> See docs/ENHANCEMENTS.md. Recommended first: bulk CSV/Excel import, physical audit by QR scan, depreciation and current value, bulk QR label printing and other bulk actions, before → after values in the history timeline. Only start once the assignment requirements are finished.
+
 ---
 
 ## Submission checklist

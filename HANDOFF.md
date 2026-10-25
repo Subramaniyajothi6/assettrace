@@ -16,7 +16,7 @@ Three roles: **Admin**, **Asset manager**, **Employee**.
 | Phase-by-phase build plan with ready prompts | Done | `docs/PLAN.md` |
 | Rules for Claude Code | Done | `CLAUDE.md` |
 | Clickable prototype of every page (31 screens, 3 roles, 8 styles) | Done, shared with team | `docs/prototype/` · live: https://subramaniyajothi6.github.io/assettrace-design/ |
-| Real app code (Next.js) | Phase 0–1 done (foundations, auth, shell, seed) | `src/` |
+| Real app code (Next.js) | Phases 0–12 done; Phase 13 ideas in docs/ENHANCEMENTS.md | `src/` |
 | GitHub repo for the real app (`assettrace`) | Not created yet | — |
 | Supabase project + private `asset-files` bucket | Not created yet | — |
 | Vercel account | Not set up yet | — |

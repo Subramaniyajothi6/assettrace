@@ -1,4 +1,4 @@
-import { Computer, Headphones, Keyboard, Laptop, Monitor, Mouse, Package, Printer, Projector, Router, Smartphone, Tablet, type LucideIcon } from "lucide-react";
+import { Computer, Network, Headphones, Keyboard, Laptop, Monitor, Mouse, Package, Printer, Projector, Router, Smartphone, Tablet, type LucideIcon } from "lucide-react";
 
 /** Icon per asset category code (LAP, DES, MON, ...). Unknown codes fall back to a box. */
 const ICONS: Record<string, LucideIcon> = {
@@ -12,6 +12,7 @@ const ICONS: Record<string, LucideIcon> = {
   HEA: Headphones,
   PRN: Printer,
   RTR: Router,
+  SWT: Network,
   PRJ: Projector,
 };
 

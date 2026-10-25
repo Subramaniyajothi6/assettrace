@@ -4,8 +4,8 @@ import type { AssetDetail } from "@/server/queries/assets";
 import { ConfirmButton } from "@/components/forms/ConfirmButton";
 import { reopenHandoverAction } from "@/actions/assignments";
 import { requestReturnAction } from "@/actions/requests";
-import { markFoundAction } from "@/actions/returns";
-import { MarkLost } from "./MarkLost";
+import { markFoundAction, unreserveAction } from "@/actions/returns";
+import { MarkLost, ReserveAsset } from "./MarkLost";
 import { TransferDialog } from "@/components/TransferDialog";
 import { employeeOptions, locationOptions } from "@/server/queries/people";
 
@@ -85,6 +85,18 @@ export async function AssetActions({ asset: a, user, pendingTransfer, openReturn
         <Link className="btn ghost-danger" href={`/assets/${a.id}/retire`}>
           Retire
         </Link>
+      ) : null}
+      {a.status === "AVAILABLE" ? <ReserveAsset assetId={a.id} tag={a.assetTag} /> : null}
+      {a.status === "RESERVED" ? (
+        <ConfirmButton
+          action={unreserveAction.bind(null, a.id)}
+          title={`Release the reservation on ${a.assetTag}?`}
+          description="It goes back to Available."
+          confirmLabel="Release"
+          success={`${a.assetTag} is available again`}
+        >
+          Release reservation
+        </ConfirmButton>
       ) : null}
       {a.status === "ASSIGNED" || a.status === "AVAILABLE" ? <MarkLost assetId={a.id} tag={a.assetTag} holder={g?.employee.name ?? null} /> : null}
       {a.status === "LOST" ? (

@@ -14,6 +14,7 @@ export type AssetFormValues = {
   id: string;
   assetTag: string;
   name: string;
+  assetType: string | null;
   brand: string | null;
   model: string | null;
   serialNumber: string | null;
@@ -68,6 +69,9 @@ export function AssetForm({ options, asset, prefix, nextNumbers }: { options: Op
           <div className="grid2">
             <Field name="name" label="Asset name *">
               <input name="name" className="inp" defaultValue={asset?.name} required placeholder="Dell Latitude 5440" />
+            </Field>
+            <Field name="assetType" label="Asset type" hint="e.g. Ultrabook, 27-inch monitor. Defaults to the category.">
+              <input name="assetType" className="inp" defaultValue={asset?.assetType ?? ""} />
             </Field>
             <Field name="brand" label="Brand">
               <input name="brand" className="inp" defaultValue={asset?.brand ?? ""} />

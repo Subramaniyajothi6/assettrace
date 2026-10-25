@@ -5,6 +5,7 @@ export const CONDITIONS = ["NEW", "GOOD", "FAIR", "POOR", "DAMAGED"] as const;
 
 const base = z.object({
   name: text("Asset name", 120),
+  assetType: optText(60),
   brand: optText(60),
   model: optText(80),
   serialNumber: text("Serial number", 80),

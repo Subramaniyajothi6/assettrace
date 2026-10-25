@@ -25,7 +25,11 @@ export const uid = () => Date.now().toString(36).slice(-5).toUpperCase();
 
 import { PrismaClient } from "@prisma/client";
 /** Direct DB access for test setup/lookups (tests run against the demo database). */
-export const db = new PrismaClient();
+if (!process.env.DATABASE_URL) process.loadEnvFile(".env");
+export const db = new PrismaClient({
+  // Small pool: the dev server shares the Supabase session pooler's client limit.
+  datasourceUrl: process.env.DATABASE_URL!.replace(/connection_limit=\d+/, "connection_limit=2"),
+});
 
 /** 1×1 PNG for upload tests. */
 export const PNG_1PX = Buffer.from(

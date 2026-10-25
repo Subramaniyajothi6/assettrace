@@ -10,11 +10,13 @@ export const NAV: Record<Role, NavItem[]> = {
   MANAGER: [
     { label: "Dashboard", href: "/dashboard" },
     { label: "Assets", href: "/assets" },
+    { label: "Employees", href: "/employees" },
     { label: "Assignments", href: "/assignments", badge: "assignments" },
     { label: "Transfers", href: "/transfers", badge: "transfers" },
     { label: "Requests", href: "/requests", badge: "requests" },
     { label: "Maintenance", href: "/maintenance", badge: "maintenance" },
     { label: "Returns", href: "/returns", badge: "returns" },
+    { label: "Inspections", href: "/inspections" },
     { label: "Reports", href: "/reports" },
   ],
   ADMIN: [
@@ -22,6 +24,7 @@ export const NAV: Record<Role, NavItem[]> = {
     { label: "Assets", href: "/assets" },
     { label: "Employees", href: "/employees" },
     { label: "Requests", href: "/requests", badge: "requests" },
+    { label: "Activity", href: "/activity" },
     { label: "Reports", href: "/reports" },
     { label: "Users", href: "/admin/users" },
     { label: "Master data", href: "/admin/departments" },

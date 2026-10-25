@@ -64,7 +64,7 @@ export async function createAsset(input: unknown, photo: File | null) {
       data: {
         ...data,
         assetTag,
-        assetType: category.name,
+        assetType: data.assetType ?? category.name,
         status: "AVAILABLE",
         photoPath,
         createdById: user.id,
@@ -83,6 +83,7 @@ export async function createAsset(input: unknown, photo: File | null) {
 
 const FIELD_LABELS: Record<string, string> = {
   name: "name",
+  assetType: "type",
   brand: "brand",
   model: "model",
   serialNumber: "serial number",
@@ -97,8 +98,11 @@ const FIELD_LABELS: Record<string, string> = {
   notes: "notes",
 };
 
+/** Dates come back from the form as calendar days, so compare them by day, not by timestamp. */
+const day = (d: unknown) => (d ? new Date(d as Date).toISOString().slice(0, 10) : null);
+
 function same(a: unknown, b: unknown) {
-  if (a instanceof Date || b instanceof Date) return (a ? +new Date(a as Date) : null) === (b ? +new Date(b as Date) : null);
+  if (a instanceof Date || b instanceof Date) return day(a) === day(b);
   if (a !== null && typeof a === "object") return Number(a) === Number(b); // Decimal
   return (a ?? null) === (b ?? null);
 }
@@ -116,7 +120,9 @@ export async function updateAsset(id: string, input: unknown, photo: File | null
   if (!changed.length) return current;
 
   return prisma.$transaction(async (tx) => {
-    const asset = await tx.asset.update({ where: { id }, data: { ...data, ...(photoPath ? { photoPath } : {}) } as Prisma.AssetUncheckedUpdateInput });
+    // Write only what changed (keeps stored timestamps intact when a date wasn't touched).
+    const patch = Object.fromEntries(changed.filter((k) => k !== "photo").map((k) => [k, data[k as keyof typeof data]]));
+    const asset = await tx.asset.update({ where: { id }, data: { ...patch, ...(photoPath ? { photoPath } : {}) } as Prisma.AssetUncheckedUpdateInput });
     await recordHistory(tx, {
       assetId: id,
       actorId: user.id,

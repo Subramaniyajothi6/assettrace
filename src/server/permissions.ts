@@ -15,6 +15,8 @@ export type CurrentUser = {
   employeeId: string | null;
   /** Departments a MANAGER manages. Empty for others; ADMIN is unscoped. */
   managedDepartmentIds: string[];
+  /** Set for accounts created or reset with a temporary password. */
+  mustChangePassword: boolean;
 };
 
 export type Action =
@@ -109,6 +111,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       email: true,
       role: true,
       isActive: true,
+      mustChangePassword: true,
       employee: { select: { id: true } },
       managedDepartments: { where: { isActive: true }, select: { id: true } },
     },
@@ -121,6 +124,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     role: user.role,
     employeeId: user.employee?.id ?? null,
     managedDepartmentIds: user.role === "MANAGER" ? user.managedDepartments.map((d) => d.id) : [],
+    mustChangePassword: user.mustChangePassword,
   };
 });
 

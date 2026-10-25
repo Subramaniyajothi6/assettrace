@@ -39,6 +39,7 @@ export default async function EditAssetPage({ params }: { params: Promise<{ id: 
           id: asset.id,
           assetTag: asset.assetTag,
           name: asset.name,
+          assetType: asset.assetType,
           brand: asset.brand,
           model: asset.model,
           serialNumber: asset.serialNumber,

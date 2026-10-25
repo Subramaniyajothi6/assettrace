@@ -95,6 +95,9 @@ export default async function DashboardPage() {
               <Link className="btn" href="/assets/new">
                 <Plus size={17} /> Register asset
               </Link>
+              <Link className="btn" href="/activity">
+                All activity
+              </Link>
             </div>
           </div>
           <div className="timeline" role="img" aria-label={`Today's activity: ${d.today.length} events`}>

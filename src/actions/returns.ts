@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { run } from "@/server/action";
 import { inspectReturn, receiveReturn } from "@/server/services/returns";
 import { markFound, markLost, retireAsset } from "@/server/services/retirement";
+import { setReserved } from "@/server/services/status";
 import { filesFrom } from "@/server/storage";
 import { formToObject } from "@/lib/validation/common";
 import { STATUS_LABELS } from "@/lib/labels";
@@ -38,4 +39,12 @@ export async function markLostAction(assetId: string, fd: FormData) {
 
 export async function markFoundAction(assetId: string) {
   return run(() => markFound(assetId), PATHS);
+}
+
+export async function reserveAction(assetId: string, fd: FormData) {
+  return run(() => setReserved(assetId, true, formToObject(fd)), PATHS);
+}
+
+export async function unreserveAction(assetId: string) {
+  return run(() => setReserved(assetId, false), PATHS);
 }

@@ -2,7 +2,24 @@
 
 import { Field } from "@/components/forms/ActionForm";
 import { FormDialog } from "@/components/forms/FormDialog";
-import { markLostAction } from "@/actions/returns";
+import { markLostAction, reserveAction } from "@/actions/returns";
+
+export function ReserveAsset({ assetId, tag }: { assetId: string; tag: string }) {
+  return (
+    <FormDialog
+      trigger="Reserve"
+      title={`Reserve ${tag}?`}
+      description="Holds it for someone, e.g. a new joiner. A reserved asset can still be assigned."
+      action={reserveAction.bind(null, assetId)}
+      success={`${tag} reserved`}
+      submitLabel="Reserve"
+    >
+      <Field name="note" label="Reserved for">
+        <input name="note" className="inp" placeholder="e.g. Divya Natarajan, joining 3 Nov" />
+      </Field>
+    </FormDialog>
+  );
+}
 
 export function MarkLost({ assetId, tag, holder }: { assetId: string; tag: string; holder: string | null }) {
   return (

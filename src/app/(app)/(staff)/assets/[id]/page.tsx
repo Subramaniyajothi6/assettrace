@@ -62,6 +62,7 @@ export default async function AssetPage({ params, searchParams }: { params: Prom
 
   const details: [string, React.ReactNode][] = [
     ["Category", a.category.name],
+    ["Type", a.assetType && a.assetType !== a.category.name ? a.assetType : "—"],
     ["Brand · model", [a.brand, a.model].filter(Boolean).join(" · ") || "—"],
     ["Serial no.", <span key="s" className="mono">{a.serialNumber ?? "—"}</span>],
     ["Department", a.department?.name ?? "—"],

@@ -42,7 +42,7 @@ const LOCATIONS = [
 
 const CATEGORIES: [string, string][] = [
   ["LAP", "Laptop"], ["DES", "Desktop"], ["MON", "Monitor"], ["MOB", "Mobile phone"], ["TAB", "Tablet"], ["KEY", "Keyboard"],
-  ["MOU", "Mouse"], ["HEA", "Headset"], ["PRN", "Printer"], ["RTR", "Router"], ["PRJ", "Projector"], ["OTH", "Other"],
+  ["MOU", "Mouse"], ["HEA", "Headset"], ["PRN", "Printer"], ["RTR", "Router"], ["SWT", "Switch"], ["PRJ", "Projector"], ["OTH", "Other"],
 ];
 
 const VENDORS = [

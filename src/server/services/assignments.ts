@@ -148,7 +148,7 @@ export async function confirmHandover(assignmentId: string, input: unknown) {
       assetId: g.assetId,
       actorId: user.id,
       event: "HANDOVER_CONFIRMED",
-      description: `Handover signed · ${g.accessories.join(", ") || "no accessories"}`,
+      description: `Handover signed · ${g.accessories.length ? `accessories: ${g.accessories.join(", ")}` : "no accessories"}`,
       metadata: { assignmentId: g.id },
     });
     const managers = await managersOf(tx, g.asset.departmentId);

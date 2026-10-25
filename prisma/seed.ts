@@ -273,7 +273,7 @@ async function main() {
       id[`g${key}`] = g.id;
       hist(key, at, "ASSIGNED", `Assigned to ${nameOfEmp[holder]}`, "Karthik Raman", "AVAILABLE", "ASSIGNED");
       if (confirmedAt) {
-        hist(key, confirmedAt, "HANDOVER_CONFIRMED", `Handover signed · ${accessories.join(", ") || "no accessories"}`, nameOfEmp[holder]);
+        hist(key, confirmedAt, "HANDOVER_CONFIRMED", `Handover signed · ${accessories.length ? `accessories: ${accessories.join(", ")}` : "no accessories"}`, nameOfEmp[holder]);
       }
       if (handover === "DISPUTED") {
         hist(key, d(-349, 11), "HANDOVER_DISPUTED", "Disputed: mouse missing from the kit", nameOfEmp[holder]);

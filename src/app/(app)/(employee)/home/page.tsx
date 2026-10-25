@@ -61,7 +61,7 @@ export default async function HomePage() {
             <b style={{ fontSize: 17 }}>Confirm you received the {g.asset.name}</b>
             <br />
             <small style={{ color: "#DCE6F6" }}>
-              {g.asset.category.name} · {g.asset.assetTag} · Assigned {formatDate(g.assignedAt)} · {g.accessories.join(", ") || "no accessories"}
+              {g.asset.category.name} · {g.asset.assetTag} · Assigned {formatDate(g.assignedAt)} · {g.accessories.length ? `Accessories: ${g.accessories.join(", ")}` : "No accessories"}
             </small>
           </span>
           <b>Review and sign →</b>

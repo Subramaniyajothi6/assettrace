@@ -38,7 +38,7 @@ const HINT: Record<MasterKind, string> = {
 function Fields({ kind, v, managers }: { kind: MasterKind; v: MasterValues; managers: Manager[] }) {
   return (
     <>
-      <Field name="name" label={kind === "vendors" ? "Vendor name *" : "Name *"}>
+      <Field name="name" label={kind === "vendors" ? "Vendor name *" : kind === "departments" ? "Department name *" : "Name *"}>
         <input id="name" name="name" className="inp" defaultValue={v.name ?? ""} required />
       </Field>
       {kind !== "vendors" ? (

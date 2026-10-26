@@ -94,7 +94,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 
       <TableCard
         head={result.columns.map((c) => (
-          <th key={c.label} style={c.kind === "money" || c.kind === "number" ? { textAlign: "right" } : undefined}>
+          <th key={c.label} style={{ textAlign: c.kind === "money" || c.kind === "number" ? "right" : undefined, minWidth: c.kind === "long" ? 280 : undefined }}>
             {c.label}
           </th>
         ))}
@@ -103,8 +103,11 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
           <tr key={i} style={{ animationDelay: `${Math.min(i * 30, 450)}ms` }}>
             {r.map((v, j) => {
               const col = result.columns[j];
+              const numeric = col.kind === "money" || col.kind === "number";
+              // Free text wraps in a wide column; everything else stays on one line (the table scrolls sideways).
+              const long = col.kind === "long";
               return (
-                <td key={j} className={col.kind === "money" || col.kind === "number" ? "num" : undefined} style={col.kind === "money" || col.kind === "number" ? { textAlign: "right", whiteSpace: "nowrap" } : col.kind === "date" ? { whiteSpace: "nowrap" } : undefined}>
+                <td key={j} className={numeric ? "num" : undefined} style={{ textAlign: numeric ? "right" : undefined, whiteSpace: long ? undefined : "nowrap", minWidth: long ? 280 : undefined }}>
                   {j === 0 ? <b>{show(v, col)}</b> : show(v, col)}
                 </td>
               );

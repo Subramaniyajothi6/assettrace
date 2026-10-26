@@ -2,7 +2,6 @@ import "server-only";
 import { z } from "zod";
 import { prisma } from "../db";
 import { assertCan, requireUser } from "../permissions";
-import { SKINS } from "@/lib/skins";
 import { text } from "@/lib/validation/common";
 
 const settingsSchema = z.object({
@@ -13,7 +12,6 @@ const settingsSchema = z.object({
     .toUpperCase()
     .regex(/^[A-Z]{2,5}$/, "2–5 letters, e.g. AST"),
   warrantyAlertDays: z.coerce.number({ error: "Enter a number of days" }).int("Whole days only").min(1, "At least 1 day").max(365, "At most 365 days"),
-  uiSkin: z.enum(SKINS.map((s) => s.id) as [string, ...string[]], { error: "Choose a style" }),
 });
 
 /** Admin → Settings. Values live in the Setting key/value table. */

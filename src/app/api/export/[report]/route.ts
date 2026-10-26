@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import Papa from "papaparse";
-import * as XLSX from "xlsx";
+import { prisma } from "@/server/db";
 import { can, getCurrentUser } from "@/server/permissions";
-import { EXPORT_MAX_ROWS, reportByKey, type Cell, type Column } from "@/server/queries/reports";
-import { formatDate } from "@/lib/format";
-import type { SearchParams } from "@/lib/list";
+import { getSettings } from "@/server/settings";
+import { buildReportWorkbook } from "@/server/exports/xlsx";
+import { EXPORT_MAX_ROWS, reportByKey, type Cell, type Column, type ReportDef } from "@/server/queries/reports";
+import { formatDate, formatDateTime } from "@/lib/format";
+import { param, type SearchParams } from "@/lib/list";
 
 /**
  * CSV / Excel export for a report (PLAN Phase 11). Same permission and scope as the
@@ -35,22 +37,19 @@ export async function GET(req: Request, { params }: { params: Promise<{ report: 
     });
   }
 
-  const ws = XLSX.utils.aoa_to_sheet([columns.map((c) => c.label), ...rows.map((r) => r.map((v) => v ?? ""))], { cellDates: true });
-  columns.forEach((c, ci) => {
-    for (let ri = 1; ri <= rows.length; ri++) {
-      const cell = ws[XLSX.utils.encode_cell({ r: ri, c: ci })];
-      if (!cell || cell.v === "") continue;
-      if (c.kind === "date") cell.z = "dd mmm yyyy";
-      if (c.kind === "money") cell.z = '"₹"#,##0';
-    }
-  });
-  ws["!cols"] = columns.map((c, ci) => ({
-    wch: Math.min(48, Math.max(c.label.length, ...rows.slice(0, 200).map((r) => (r[ci] instanceof Date ? 11 : String(r[ci] ?? "").length))) + 2),
-  }));
-  ws["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: columns.length - 1 } }) };
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, def.title.slice(0, 31));
-  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
+  const { orgName } = await getSettings();
+  const buf = await buildReportWorkbook(
+    {
+      orgName,
+      title: def.title,
+      description: def.description,
+      generatedAt: formatDateTime(new Date()),
+      generatedBy: user.name,
+      filters: await describeFilters(def, sp),
+    },
+    columns,
+    rows,
+  );
   return new NextResponse(new Uint8Array(buf), {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -58,6 +57,28 @@ export async function GET(req: Request, { params }: { params: Promise<{ report: 
       "Cache-Control": "no-store",
     },
   });
+}
+
+/** Human-readable list of the filters applied, for the Excel title block. */
+async function describeFilters(def: ReportDef, sp: SearchParams): Promise<string[]> {
+  const out: string[] = [];
+  const q = param(sp, "q");
+  const status = param(sp, "status");
+  const [department, location, category] = await Promise.all([
+    param(sp, "department") ? prisma.department.findUnique({ where: { id: param(sp, "department") }, select: { name: true } }) : null,
+    param(sp, "location") ? prisma.location.findUnique({ where: { id: param(sp, "location") }, select: { name: true } }) : null,
+    param(sp, "category") ? prisma.assetCategory.findUnique({ where: { id: param(sp, "category") }, select: { name: true } }) : null,
+  ]);
+  if (q) out.push(`Search "${q}"`);
+  if (status) out.push(`Status: ${def.statuses?.[status] ?? status}`);
+  if (category) out.push(`Category: ${category.name}`);
+  if (department) out.push(`Department: ${department.name}`);
+  if (location) out.push(`Location: ${location.name}`);
+  const from = param(sp, "from");
+  const to = param(sp, "to");
+  if (from || to) out.push(`${def.dateLabel ?? "Date"}: ${from ? formatDate(from) : "…"} – ${to ? formatDate(to) : "…"}`);
+  if (def.filters.includes("days") && param(sp, "days")) out.push(`Next ${param(sp, "days")} days`);
+  return out;
 }
 
 function csvCell(v: Cell, col: Column): string | number {

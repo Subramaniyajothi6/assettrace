@@ -44,7 +44,7 @@ export default async function MasterPage({ params, searchParams }: { params: Pro
   let head: string[] = [];
 
   if (kind === "departments") {
-    head = ["Name", "Code", "Managers", "Employees", "Assets"];
+    head = ["Department name", "Code", "Managers", "Employees", "Assets"];
     const [list, n] = await Promise.all([
       prisma.department.findMany({
         where: nameWhere,

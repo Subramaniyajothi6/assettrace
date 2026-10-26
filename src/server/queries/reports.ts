@@ -21,7 +21,8 @@ import {
 
 /** A cell keeps its real type so CSV/XLSX/preview can each format it properly. */
 export type Cell = string | number | Date | null;
-export type ColKind = "text" | "date" | "money" | "number";
+/** `long` = free text (reasons, remarks): wide and wrapping; other text stays on one line. */
+export type ColKind = "text" | "long" | "date" | "money" | "number";
 export type Column = { label: string; kind?: ColKind };
 export type FilterKey = "q" | "from" | "to" | "status" | "category" | "department" | "location" | "days";
 
@@ -170,7 +171,7 @@ export const REPORTS: ReportDef[] = [
           { label: "Since", kind: "date" },
           { label: "Expected return", kind: "date" },
           { label: "Handover" },
-          { label: "Accessories" },
+          { label: "Accessories", kind: "long" },
         ],
         rows: list.map((g) => [
           g.employee.name,
@@ -212,17 +213,17 @@ export const REPORTS: ReportDef[] = [
       return {
         total,
         columns: [
-          { label: "Record" },
+          { label: "Record ID" },
           { label: "Asset ID" },
           { label: "Asset" },
           { label: "Type" },
-          { label: "Problem" },
+          { label: "Problem", kind: "long" },
           { label: "Provider" },
           { label: "Service date", kind: "date" },
           { label: "Completed", kind: "date" },
           { label: "Cost (₹)", kind: "money" },
           { label: "Warranty" },
-          { label: "Linked issue" },
+          { label: "Linked issue ID" },
           { label: "Status" },
         ],
         rows: list.map((m) => [
@@ -271,7 +272,7 @@ export const REPORTS: ReportDef[] = [
       return {
         total,
         columns: [
-          { label: "Transfer" },
+          { label: "Transfer ID" },
           { label: "Asset ID" },
           { label: "Asset" },
           { label: "From" },
@@ -279,12 +280,12 @@ export const REPORTS: ReportDef[] = [
           { label: "From department" },
           { label: "To department" },
           { label: "To location" },
-          { label: "Reason" },
+          { label: "Reason", kind: "long" },
           { label: "Status" },
           { label: "Requested", kind: "date" },
           { label: "Requested by" },
           { label: "Reviewed by" },
-          { label: "Remarks" },
+          { label: "Remarks", kind: "long" },
         ],
         rows: list.map((t) => [
           t.transferNo,
@@ -329,7 +330,7 @@ export const REPORTS: ReportDef[] = [
       return {
         total,
         columns: [
-          { label: "Return" },
+          { label: "Return ID" },
           { label: "Asset ID" },
           { label: "Asset" },
           { label: "Returned by" },
@@ -337,8 +338,8 @@ export const REPORTS: ReportDef[] = [
           { label: "Received", kind: "date" },
           { label: "Received by" },
           { label: "Condition" },
-          { label: "Missing accessories" },
-          { label: "Damage" },
+          { label: "Missing accessories", kind: "long" },
+          { label: "Damage", kind: "long" },
           { label: "Inspection result" },
           { label: "Status" },
         ],
@@ -385,12 +386,12 @@ export const REPORTS: ReportDef[] = [
           { label: "Name" },
           { label: "Category" },
           { label: "Retired on", kind: "date" },
-          { label: "Reason" },
+          { label: "Reason", kind: "long" },
           { label: "Final condition" },
           { label: "Disposal" },
           { label: "Authorised by" },
           { label: "Purchase cost (₹)", kind: "money" },
-          { label: "Remarks" },
+          { label: "Remarks", kind: "long" },
         ],
         rows: list.map((r) => [
           r.asset.assetTag,
@@ -478,10 +479,10 @@ export const REPORTS: ReportDef[] = [
       return {
         total,
         columns: [
-          { label: "Issue" },
+          { label: "Issue ID" },
           { label: "Asset ID" },
           { label: "Asset" },
-          { label: "Title" },
+          { label: "Title", kind: "long" },
           { label: "Reported by" },
           { label: "Category" },
           { label: "Severity" },
@@ -489,7 +490,7 @@ export const REPORTS: ReportDef[] = [
           { label: "Reported", kind: "date" },
           { label: "Resolved", kind: "date" },
           { label: "Handled by" },
-          { label: "Resolution" },
+          { label: "Resolution", kind: "long" },
         ],
         rows: list.map((i) => [
           i.issueNo,

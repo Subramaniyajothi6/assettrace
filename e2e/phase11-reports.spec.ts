@@ -29,7 +29,10 @@ test("manager sees a scoped inventory and can export CSV and Excel", async ({ pa
   const xlsx = await page.request.get("/api/export/inventory?format=xlsx", { timeout: 90_000 });
   expect(xlsx.status()).toBe(200);
   const wb = XLSX.read(await xlsx.body(), { type: "buffer", cellDates: true });
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[wb.SheetNames[0]]);
+  // Rows 1–4 are the title block; the last row is the totals row.
+  const rows = XLSX.utils
+    .sheet_to_json<Record<string, unknown>>(wb.Sheets[wb.SheetNames[0]], { range: 4 })
+    .filter((r) => r["Asset ID"] !== "Total");
   expect(rows).toHaveLength(scoped);
   expect(typeof rows.find((r) => r["Cost (₹)"] !== undefined)?.["Cost (₹)"]).toBe("number");
 });

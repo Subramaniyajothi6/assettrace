@@ -28,7 +28,7 @@ mandatory inspection → retire, with a status state machine that blocks invalid
 | Dashboards | Role dashboards with KPI cards, location status bars, "needs your action", charts (status, category, department, location, maintenance cost, warranty expiry, monthly transactions) |
 | Reports & export | 8 reports with filters and preview; **CSV and Excel (.xlsx)** export, scoped to the user |
 | Notifications | In-app bell + page: assigned, handover signed/disputed, transfer requested/completed, return requested, maintenance completed, warranty expiring (idempotent daily check), issue/request updates |
-| Admin | Users & roles, departments (with managers), locations, categories, vendors, employees, system settings (org name, asset ID prefix, warranty window, visual style) |
+| Admin | Users & roles, departments (with managers), locations, categories, vendors, employees, system settings (org name, asset ID prefix, warranty window) |
 | Security | Role-based access in three layers, department-scoped managers, private file storage with signed URLs, forced password change for temporary passwords, no hard deletes |
 
 ## Roles

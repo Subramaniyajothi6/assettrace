@@ -9,14 +9,14 @@ test("admin manages departments: add, duplicate error, edit, deactivate", async 
   await expect(page.getByRole("heading", { name: "Master data" })).toBeVisible();
   const code = `Q${uid().slice(0, 4)}`;
   const form = page.locator("form").filter({ hasText: "Add department" });
-  await form.getByLabel("Name *").fill(`QA Dept ${code}`);
+  await form.getByLabel("Department name *").fill(`QA Dept ${code}`);
   await form.getByLabel("Code *").fill(code);
   await form.getByRole("button", { name: "Save department" }).click();
   await toast(page, `QA Dept ${code} added`);
   await expect(page.getByRole("cell", { name: `QA Dept ${code}`, exact: true })).toBeVisible();
 
   // duplicate name → field error, not a 500
-  await form.getByLabel("Name *").fill("Engineering");
+  await form.getByLabel("Department name *").fill("Engineering");
   await form.getByLabel("Code *").fill("ZZZ1");
   await form.getByRole("button", { name: "Save department" }).click();
   await expect(form.getByText("Name already exists")).toBeVisible();
@@ -25,7 +25,7 @@ test("admin manages departments: add, duplicate error, edit, deactivate", async 
   const row = page.getByRole("row").filter({ hasText: `QA Dept ${code}` });
   await row.getByRole("button", { name: `Edit QA Dept ${code}` }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByLabel("Name *").fill(`QA Dept ${code} renamed`);
+  await dialog.getByLabel("Department name *").fill(`QA Dept ${code} renamed`);
   await dialog.getByLabel("Lakshmi Iyer").check();
   await dialog.getByRole("button", { name: "Save" }).click();
   await toast(page, `QA Dept ${code} renamed saved`);

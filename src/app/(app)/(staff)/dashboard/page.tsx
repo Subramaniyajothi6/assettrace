@@ -7,7 +7,7 @@ import { getActionItems, getStaffDashboard } from "@/server/queries/dashboard";
 import { checkWarranties } from "@/server/services/notifications";
 import { PageHeader } from "@/components/PageHeader";
 import { KpiCard } from "@/components/KpiCard";
-import { BarList, ChartCard, ColumnChart, StatusDonut, TrendChart } from "@/components/charts/Charts";
+import { BreakdownCard, ChartCard, ColumnChart, TrendChart } from "@/components/charts/Charts";
 import { daysUntil } from "@/components/WarrantyCell";
 import { firstName, greeting, longDay, rupeeShort } from "@/lib/format";
 import { HISTORY_EVENT_LABELS, STATUS_COLORS, STATUS_LABELS } from "@/lib/labels";
@@ -23,6 +23,24 @@ const EV_COLOR: Partial<Record<HistoryEvent, string>> = {
   TRANSFERRED: "#7C5CC4",
 };
 const hourFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "numeric", hourCycle: "h23" });
+/** "Needs your action" shows this many items; the rest open behind "Show N more" so the card stays level with the locations card. */
+const ACTIONS_SHOWN = 5;
+
+function ActionItem({ a, delay }: { a: Awaited<ReturnType<typeof getActionItems>>[number]; delay: number }) {
+  return (
+    <Link className="li rise" href={a.href} style={{ animationDelay: `${delay}ms` }}>
+      <span className="ico" style={{ background: a.bg, color: a.fg, fontSize: 11, fontWeight: 800 }}>
+        {a.tag}
+      </span>
+      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <b style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</b>
+        <small className="muted">{a.sub}</small>
+      </span>
+      <span className="btn sm">{a.cta}</span>
+    </Link>
+  );
+}
+
 const timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit" });
 /** 9 am → 6 pm mapped to 0–100% of the timeline. */
 const hx = (d: Date) => {
@@ -193,7 +211,7 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div className="row">
+      <div className="row" style={{ alignItems: "stretch" }}>
         <section className="card pad main-col rise" style={{ animationDelay: "420ms", display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
             <h2 className="h2">Where your assets are</h2>
@@ -201,7 +219,7 @@ export default async function DashboardPage() {
               {d.locations.reduce((n, l) => n + l.total, 0)} active assets across {d.locations.length} location{d.locations.length === 1 ? "" : "s"}
             </small>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16 }}>
+          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16 }}>
             {d.locations.map((l, li) => (
               <div key={l.id} className="card pad-s lift" style={{ borderTop: `4px solid ${["#3A6BB8", "#D2643E", "#2E7D4F"][li % 3]}`, display: "flex", flexDirection: "column", gap: 14 }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -265,18 +283,19 @@ export default async function DashboardPage() {
             <span className="pill s-bad">{actions.length} open</span>
           </div>
           {actions.length ? (
-            actions.slice(0, 7).map((a, i) => (
-              <Link key={`${a.href}-${i}`} className="li rise" href={a.href} style={{ animationDelay: `${560 + i * 60}ms` }}>
-                <span className="ico" style={{ background: a.bg, color: a.fg, fontSize: 11, fontWeight: 800 }}>
-                  {a.tag}
-                </span>
-                <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-                  <b style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</b>
-                  <small className="muted">{a.sub}</small>
-                </span>
-                <span className="btn sm">{a.cta}</span>
-              </Link>
-            ))
+            <>
+              {actions.slice(0, ACTIONS_SHOWN).map((a, i) => (
+                <ActionItem key={`${a.href}-${i}`} a={a} delay={560 + i * 60} />
+              ))}
+              {actions.length > ACTIONS_SHOWN ? (
+                <details className="more-actions">
+                  <summary className="btn sm">Show {actions.length - ACTIONS_SHOWN} more</summary>
+                  {actions.slice(ACTIONS_SHOWN).map((a, i) => (
+                    <ActionItem key={`${a.href}-${i}`} a={a} delay={0} />
+                  ))}
+                </details>
+              ) : null}
+            </>
           ) : (
             <div className="empty">
               <b>All clear</b>
@@ -286,19 +305,15 @@ export default async function DashboardPage() {
         </section>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))", gap: 18 }}>
-        <ChartCard title="Status distribution" sub="All assets in your scope">
-          <StatusDonut data={d.statusDistribution} />
-        </ChartCard>
-        <ChartCard title="Assets by category" sub="Active assets">
-          <BarList data={d.byCategory} />
-        </ChartCard>
-        <ChartCard title="Assets by department" sub="Active assets">
-          <BarList data={d.byDepartment} />
-        </ChartCard>
-        <ChartCard title="Assets by location" sub="Active assets">
-          <BarList data={d.byLocation} />
-        </ChartCard>
+      <div className="dash-charts">
+        <BreakdownCard
+          tabs={[
+            { key: "status", label: "Status", title: "All assets by status", sub: `${d.total} assets in your scope`, groups: d.breakdown.status },
+            { key: "category", label: "Category", title: "Active assets by category", sub: `Coloured by status · ${d.activeCount} active assets`, groups: d.breakdown.category },
+            { key: "department", label: "Department", title: "Active assets by department", sub: `Coloured by status · ${d.activeCount} active assets`, groups: d.breakdown.department },
+            { key: "location", label: "Location", title: "Active assets by location", sub: `Coloured by status · ${d.activeCount} active assets`, groups: d.breakdown.location },
+          ]}
+        />
         <ChartCard title="Maintenance cost by month" sub="Last 12 months, ₹">
           <ColumnChart data={d.maintenanceByMonth} money />
         </ChartCard>

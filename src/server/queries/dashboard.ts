@@ -2,6 +2,7 @@ import "server-only";
 import { Prisma, type AssetStatus } from "@prisma/client";
 import { prisma } from "../db";
 import { managedAssetScope, requestScope, type CurrentUser } from "../permissions";
+import { STATUS_LABELS } from "@/lib/labels";
 
 const DAY = 864e5;
 /** Order of segments in the location status bars (in use first, problems last). */
@@ -22,6 +23,36 @@ function lastMonths(n: number, forward = false) {
     const d = new Date(now.getFullYear(), now.getMonth() + (forward ? i : i - (n - 1)), 15);
     return { key: monthKey(d), label: monthLabel.format(d) };
   });
+}
+
+/** One row of the dashboard breakdown card: a group (category, department…) split by status. */
+export type BreakdownGroup = { label: string; filter: string | null; total: number; statuses: { status: AssetStatus; count: number }[] };
+const BREAKDOWN_ROWS = 8;
+
+/** Groups per-(key, status) counts into rows, largest first; the tail folds into "Other". */
+function breakdown<T extends { status: AssetStatus; _count: { _all: number } }>(rows: T[], key: (r: T) => string | null, names: Map<string, string>, param: string): BreakdownGroup[] {
+  const groups = new Map<string, BreakdownGroup>();
+  for (const r of rows) {
+    const id = key(r) ?? "";
+    const g = groups.get(id) ?? { label: names.get(id) ?? "Unassigned", filter: id ? `${param}=${id}` : null, total: 0, statuses: [] };
+    g.total += r._count._all;
+    g.statuses.push({ status: r.status, count: r._count._all });
+    groups.set(id, g);
+  }
+  const order = (s: BreakdownGroup["statuses"]) => s.sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status));
+  const sorted = [...groups.values()].sort((a, b) => b.total - a.total);
+  sorted.forEach((g) => order(g.statuses));
+  if (sorted.length <= BREAKDOWN_ROWS) return sorted;
+  const tail = sorted.slice(BREAKDOWN_ROWS - 1);
+  const merged = new Map<AssetStatus, number>();
+  for (const g of tail) for (const s of g.statuses) merged.set(s.status, (merged.get(s.status) ?? 0) + s.count);
+  const other: BreakdownGroup = {
+    label: `Other (${tail.length})`,
+    filter: null,
+    total: tail.reduce((n, g) => n + g.total, 0),
+    statuses: order([...merged].map(([status, count]) => ({ status, count }))),
+  };
+  return [...sorted.slice(0, BREAKDOWN_ROWS - 1), other];
 }
 
 /** SQL fragment limiting an "Asset" alias to the user's managed departments. */
@@ -46,7 +77,6 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
     byStatus,
     byCategory,
     byDepartment,
-    byLocation,
     value,
     warrantySoon,
     nextWarranty,
@@ -64,9 +94,8 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
     lateMaintenance,
   ] = await Promise.all([
     prisma.asset.groupBy({ by: ["status"], where: scope, _count: { _all: true } }),
-    prisma.asset.groupBy({ by: ["categoryId"], where: { AND: [scope, { status: { not: "RETIRED" } }] }, _count: { _all: true } }),
-    prisma.asset.groupBy({ by: ["departmentId"], where: { AND: [scope, { status: { not: "RETIRED" } }] }, _count: { _all: true } }),
-    prisma.asset.groupBy({ by: ["locationId"], where: { AND: [scope, { status: { not: "RETIRED" } }] }, _count: { _all: true } }),
+    prisma.asset.groupBy({ by: ["categoryId", "status"], where: { AND: [scope, { status: { not: "RETIRED" } }] }, _count: { _all: true } }),
+    prisma.asset.groupBy({ by: ["departmentId", "status"], where: { AND: [scope, { status: { not: "RETIRED" } }] }, _count: { _all: true } }),
     prisma.asset.aggregate({ where: { AND: [scope, { status: { not: "RETIRED" } }] }, _sum: { purchaseCost: true }, _count: { _all: true } }),
     prisma.asset.count({ where: { AND: [scope, { status: { not: "RETIRED" } }, { warrantyEnd: { gte: now, lte: soon } }] } }),
     prisma.asset.findFirst({
@@ -128,11 +157,6 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
     }
     return buckets;
   };
-  const byName = <T extends { _count: { _all: number } }>(rows: T[], key: (r: T) => string | null, names: Map<string, string>) =>
-    rows
-      .map((r) => ({ label: names.get(key(r) ?? "") ?? "Unassigned", value: r._count._all }))
-      .sort((a, b) => b.value - a.value);
-
   const months = lastMonths(MONTHS);
   const series = <T extends { m: string }>(rows: T[], pick: (r: T) => number, ms = months) => ms.map((m) => ({ label: m.label, value: pick(rows.find((r) => r.m === m.key) ?? ({} as T)) || 0 }));
 
@@ -165,7 +189,14 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
       retired: count("RETIRED"),
       returned: count("RETURNED"),
     },
-    statusDistribution: byStatus.map((r) => ({ status: r.status, value: r._count._all })),
+    breakdown: {
+      status: byStatus
+        .map((r) => ({ label: STATUS_LABELS[r.status], filter: "", total: r._count._all, statuses: [{ status: r.status, count: r._count._all }] }))
+        .sort((a, b) => b.total - a.total),
+      category: breakdown(byCategory, (r) => r.categoryId, new Map(categories.map((c) => [c.id, c.name])), "category"),
+      department: breakdown(byDepartment, (r) => r.departmentId, new Map(departments.map((d) => [d.id, d.name])), "department"),
+      location: breakdown(locationAssets, (r) => r.locationId, new Map(locations.map((l) => [l.id, l.name])), "location"),
+    } satisfies Record<string, BreakdownGroup[]>,
     warrantySoon,
     nextWarranty,
     pendingHandovers,
@@ -177,9 +208,6 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
     trends: { total: trend(), available: trend("AVAILABLE"), assigned: trend("ASSIGNED"), maintenance: trend("UNDER_MAINTENANCE") },
     today: todayEvents,
     locations: locCards,
-    byCategory: byName(byCategory, (r) => r.categoryId, new Map(categories.map((c) => [c.id, c.name]))),
-    byDepartment: byName(byDepartment, (r) => r.departmentId, new Map(departments.map((d) => [d.id, d.name]))),
-    byLocation: byName(byLocation, (r) => r.locationId, new Map(locations.map((l) => [l.id, l.name]))),
     maintenanceByMonth: series(maintenanceByMonth, (r) => r.total),
     purchasesByMonth: series(purchasesByMonth, (r) => r.total),
     transactionsByMonth: series(transactionsByMonth, (r) => r.n),

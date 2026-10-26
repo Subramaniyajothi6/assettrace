@@ -31,7 +31,8 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 
 ## Open items
 
-- [ ] **PC `.env`:** change `connection_limit=10` to `connection_limit=5` in `DATABASE_URL` (done on the laptop only).
+- [ ] **Run only one dev server at a time.** On 27 Oct the PC hit `EMAXCONNSESSION` while something else (probably the laptop's server) still held pool slots. Stop the server on one machine before starting it on the other. A permanent fix would be the transaction pooler (port 6543 + `pgbouncer=true`) for `DATABASE_URL`.
+- [ ] **Dashboard e2e not run** after the 27 Oct breakdown card change. `e2e/phase10-dashboards.spec.ts` was updated but not executed: the e2e suite reseeds the shared database.
 - [ ] **KPI cards (new StatTile style):** only the Assets page uses them so far. Dashboard, Assignments, Maintenance, Users and employee Home still have the old cards, and each needs its own choice of what the bar shows.
 - [ ] **Form dropdowns** (Register asset, Assign, etc.) are still native `<select>` and can open upwards in short windows. The toolbar filters are already fixed. Switch the forms to `FilterSelect`-style dropdowns?
 - [ ] **Locations / Categories:** rename the "Name" field and column to "Location name" / "Category name", to match "Department name" and "Vendor name"?
@@ -42,6 +43,29 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 - [ ] **From HANDOFF/LOCAL_SECRETS:** Vercel deployment, README screenshots, Phase 13 enhancements (`docs/ENHANCEMENTS.md`).
 
 ## Log
+
+### 27 Oct 2026 — PC
+Pulled the laptop's 26 Oct work (`7326304`, `797b14a`, `59cedc4`) and ran `npm install` (adds `exceljs`).
+
+**Database connection**
+- The dashboard failed with `EMAXCONNSESSION` (all 15 session-pooler slots held). Only one dev server was running on the PC, so the other slots were held elsewhere, probably by the laptop.
+- Changed the PC `.env` to `connection_limit=5` (both machines now match) and restarted the dev server.
+
+**Dashboard layout (uneven cards)**
+- The user picked a layout from a mock-up of options A–D plus compact status variants S1–S4. They chose **S3**: status as the first tab of one breakdown card.
+- New `BreakdownCard` in `src/components/charts/Charts.tsx` replaces the status donut and the three "Assets by category/department/location" bar lists:
+  - It's full width, with tabs **Status / Category / Department / Location**. The heading follows the tab ("All assets by status", "Active assets by department", …).
+  - Each row is a bar split by status (`.loc-bar` style, `STATUS_COLORS`), with a legend on the split tabs. Names and segments link to `/assets?category|department|location=…&status=…`.
+  - More than 8 rows fold into "Other (n)" (not linked). The panel has a fixed minimum height so switching tabs doesn't move the page.
+  - Arrow keys switch tabs.
+  - `StatusDonut` and `BarList` were removed (no other users).
+- `getStaffDashboard` now returns `breakdown.{status,category,department,location}` (`BreakdownGroup[]`). Category and department are grouped by `[id, status]`, and location reuses the existing per-location status query (the separate `byLocation` query was dropped).
+- Charts below the card use the new `.dash-charts` grid: two equal columns (one below 900px), and Monthly transactions stays full width.
+- **Top row:** "Where your assets are" and "Needs your action" stretch to the same height, and the location cards fill it. The action list shows 5 items plus "Show N more" (a `<details>`, because there is no page listing all action items).
+- `e2e/phase10-dashboards.spec.ts` was updated for the new headings and tabs.
+
+**Checked**
+- `tsc` and `eslint` are clean. Not yet checked: `npm run build`, the e2e suite, and a visual check of the dashboard by Claude (the Chrome extension wasn't connected). Check the dashboard as admin and manager on the next session.
 
 ### 26 Oct 2026 — laptop
 Project copied from the PC to the laptop (`D:\Adz4\AssetTrace-full-transfer\AssetTrace\assettrace`). Ran `npm install` and the dev server.

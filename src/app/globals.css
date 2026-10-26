@@ -183,3 +183,12 @@
 @layer components {
   .av.profile-av { width: 80px; height: 80px; font-size: 28px; }
 }
+
+@layer components {
+  /* Dashboard charts: breakdown card full width, then two equal columns (one below 900px). */
+  .dash-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  @media (max-width: 900px) { .dash-charts { grid-template-columns: minmax(0, 1fr); } }
+  .more-actions > summary { list-style: none; margin: 8px 8px 4px; width: fit-content; cursor: pointer; }
+  .more-actions > summary::-webkit-details-marker { display: none; }
+  .more-actions[open] > summary { display: none; }
+}

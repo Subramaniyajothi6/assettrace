@@ -11,8 +11,13 @@ test("manager dashboard is scoped; admin sees everything", async ({ page, browse
   await page.goto("/dashboard");
   const total = page.getByRole("link", { name: /Total assets/ });
   await expect(total).toContainText(String(scoped));
-  for (const t of ["Status distribution", "Assets by category", "Assets by department", "Assets by location", "Maintenance cost by month", "Warranty expiry", "Monthly asset transactions", "Where your assets are", "Needs your action"]) {
+  for (const t of ["All assets by status", "Maintenance cost by month", "Warranty expiry", "Monthly asset transactions", "Where your assets are", "Needs your action"]) {
     await expect(page.getByRole("heading", { name: t })).toBeVisible();
+  }
+  // Breakdown card: one tab per dimension, the heading follows the tab
+  for (const [tab, heading] of [["Category", "Active assets by category"], ["Department", "Active assets by department"], ["Location", "Active assets by location"]]) {
+    await page.getByRole("tab", { name: tab }).click();
+    await expect(page.getByRole("heading", { name: heading })).toBeVisible();
   }
   // Every chart has a table view
   await page.getByText("Show as table").first().click();

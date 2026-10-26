@@ -1,8 +1,14 @@
 "use client";
 
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useState } from "react";
+import Link from "next/link";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { AssetStatus } from "@prisma/client";
 import { STATUS_COLORS, STATUS_LABELS } from "@/lib/labels";
+import type { BreakdownGroup } from "@/server/queries/dashboard";
+
+/** Segment order in status-split bars: in use first, problems last (matches the location bars). */
+const STATUS_ORDER: AssetStatus[] = ["ASSIGNED", "AVAILABLE", "UNDER_MAINTENANCE", "RESERVED", "RETURNED", "DAMAGED", "LOST", "RETIRED"];
 
 export type Point = { label: string; value: number };
 
@@ -115,80 +121,108 @@ export function TrendChart({ data, height = 200, unit = "events" }: { data: Poin
   );
 }
 
-/** Ranked horizontal bars with direct labels (identity is the text, not the color). */
-export function BarList({ data, unit = "assets", max = 8 }: { data: Point[]; unit?: string; max?: number }) {
-  if (!data.length) return <EmptyChart />;
-  const shown = data.length > max ? [...data.slice(0, max - 1), { label: "Other", value: data.slice(max - 1).reduce((s, d) => s + d.value, 0) }] : data;
-  const top = Math.max(...shown.map((d) => d.value), 1);
-  return (
-    <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-      {shown.map((d, i) => (
-        <li key={d.label} title={`${d.label}: ${d.value} ${unit}`} style={{ display: "grid", gridTemplateColumns: "minmax(90px, 36%) 1fr auto", gap: 10, alignItems: "center", fontSize: 14 }}>
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.label}</span>
-          <span style={{ height: 12, background: "var(--at-chip)", borderRadius: 4, overflow: "hidden" }}>
-            <i
-              style={{
-                display: "block",
-                height: "100%",
-                width: `${(d.value / top) * 100}%`,
-                background: ACCENT,
-                borderRadius: 4,
-                transformOrigin: "left",
-                animation: `slide .8s cubic-bezier(.2,.7,.2,1) ${200 + i * 45}ms both`,
-              }}
-            />
-          </span>
-          <b className="num" style={{ minWidth: 24, textAlign: "right" }}>
-            {d.value}
-          </b>
-        </li>
-      ))}
-    </ul>
-  );
-}
+export type BreakdownTab = { key: string; label: string; title: string; sub: string; groups: BreakdownGroup[] };
 
-/** Status distribution donut. Status colours are fixed by the design; the legend carries names + counts. */
-export function StatusDonut({ data }: { data: { status: AssetStatus; value: number }[] }) {
-  const total = data.reduce((s, d) => s + d.value, 0);
-  if (!total) return <EmptyChart />;
-  const rows = [...data].sort((a, b) => b.value - a.value);
+/**
+ * Dashboard breakdown: one card, a tab per dimension (status, category, department, location).
+ * Each row is a bar split by status, in the same colours as the location bars; every segment links to the filtered asset list.
+ */
+export function BreakdownCard({ tabs }: { tabs: BreakdownTab[] }) {
+  const [active, setActive] = useState(tabs[0].key);
+  const tab = tabs.find((t) => t.key === active) ?? tabs[0];
+  const top = Math.max(1, ...tab.groups.map((g) => g.total));
+  // Keep the card the same height on every tab so the page below doesn't jump.
+  const rows = Math.max(...tabs.map((t) => t.groups.length));
+  const split = tab.key !== "status";
+  const legend = STATUS_ORDER.filter((s) => tab.groups.some((g) => g.statuses.some((x) => x.status === s)));
+  const href = (g: BreakdownGroup, status?: AssetStatus) => {
+    const q = [g.filter, status && `status=${status}`].filter(Boolean).join("&");
+    return `/assets${q ? `?${q}` : ""}`;
+  };
+  const move = (e: React.KeyboardEvent, i: number) => {
+    const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    if (!d) return;
+    const next = tabs[(i + d + tabs.length) % tabs.length];
+    setActive(next.key);
+    document.getElementById(`bd-tab-${next.key}`)?.focus();
+  };
+
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-      <div style={{ width: 170, height: 170, position: "relative", flex: "none" }}>
-        <ResponsiveContainer>
-          <PieChart>
-            <Pie data={rows} dataKey="value" nameKey="status" innerRadius={56} outerRadius={82} paddingAngle={2} stroke="var(--at-card)" strokeWidth={2}>
-              {rows.map((d) => (
-                <Cell key={d.status} fill={STATUS_COLORS[d.status]} />
-              ))}
-            </Pie>
-            <Tooltip
-              content={({ active, payload }) =>
-                active && payload?.length ? (
-                  <TipBox label={STATUS_LABELS[payload[0].payload.status as AssetStatus]} value={`${payload[0].value} of ${total} (${Math.round((Number(payload[0].value) / total) * 100)}%)`} />
-                ) : null
-              }
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <b style={{ fontSize: 26 }}>{total}</b>
-          <small className="muted">assets</small>
+    <section className="card pad rise" style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0, gridColumn: "1 / -1" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+        <div>
+          <h2 className="h2">{tab.title}</h2>
+          <small className="muted">{tab.sub}</small>
+        </div>
+        <div className="seg" role="tablist" aria-label="Break down by" style={{ background: "var(--at-chip)", boxShadow: "none", padding: 4 }}>
+          {tabs.map((t, i) => (
+            <button
+              key={t.key}
+              id={`bd-tab-${t.key}`}
+              type="button"
+              role="tab"
+              aria-selected={t.key === tab.key}
+              aria-controls="bd-panel"
+              tabIndex={t.key === tab.key ? 0 : -1}
+              onClick={() => setActive(t.key)}
+              onKeyDown={(e) => move(e, i)}
+              style={{ height: 32, padding: "0 14px", fontSize: 13 }}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       </div>
-      <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6, flex: "1 1 160px", fontSize: 14 }}>
-        {rows.map((d) => (
-          <li key={d.status} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <i style={{ width: 10, height: 10, borderRadius: 3, background: STATUS_COLORS[d.status], flex: "none" }} aria-hidden="true" />
-            <span style={{ flex: 1 }}>{STATUS_LABELS[d.status]}</span>
-            <b className="num">{d.value}</b>
-            <small className="muted num" style={{ width: 36, textAlign: "right" }}>
-              {Math.round((d.value / total) * 100)}%
-            </small>
-          </li>
-        ))}
-      </ul>
-    </div>
+
+      <div id="bd-panel" role="tabpanel" aria-labelledby={`bd-tab-${tab.key}`} style={{ minHeight: rows * 28 + (rows - 1) * 10 }}>
+        {tab.groups.length ? (
+          <ul key={tab.key} style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+            {tab.groups.map((g, i) => (
+              <li key={g.label} style={{ display: "grid", gridTemplateColumns: "minmax(110px, 20%) 1fr 32px", gap: 12, alignItems: "center", height: 28, fontSize: 14 }}>
+                {g.filter === null ? (
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.label}</span>
+                ) : (
+                  <Link href={href(g)} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "inherit", textDecoration: "none" }} title={`Show ${g.label.toLowerCase()} assets`}>
+                    {g.label}
+                  </Link>
+                )}
+                <div
+                  className="loc-bar"
+                  role="img"
+                  aria-label={`${g.label}: ${g.statuses.map((s) => `${s.count} ${STATUS_LABELS[s.status].toLowerCase()}`).join(", ")}`}
+                  style={{ width: `${(g.total / top) * 100}%`, background: "transparent", animationDelay: `${i * 45}ms` }}
+                >
+                  {g.statuses.map((s) => {
+                    const label = `${split ? `${g.label} · ` : ""}${STATUS_LABELS[s.status]}: ${s.count} (${Math.round((s.count / g.total) * 100)}%)`;
+                    return g.filter === null ? (
+                      <span key={s.status} title={label} style={{ flex: `${s.count} 1 0`, background: STATUS_COLORS[s.status], minWidth: 4 }} />
+                    ) : (
+                      <Link key={s.status} href={href(g, s.status)} title={label} style={{ flex: `${s.count} 1 0`, background: STATUS_COLORS[s.status] }} />
+                    );
+                  })}
+                </div>
+                <b className="num" style={{ textAlign: "right" }}>
+                  {g.total}
+                </b>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyChart />
+        )}
+      </div>
+
+      {split && legend.length ? (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px", fontSize: 12, color: "var(--at-soft)" }}>
+          {legend.map((s) => (
+            <span key={s} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <i style={{ width: 9, height: 9, borderRadius: 3, background: STATUS_COLORS[s], flex: "none" }} aria-hidden="true" />
+              {STATUS_LABELS[s]}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </section>
   );
 }
 

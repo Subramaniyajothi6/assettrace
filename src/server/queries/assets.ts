@@ -58,7 +58,7 @@ export async function listAssets(user: CurrentUser, sp: SearchParams, warrantyDa
   const where: Prisma.AssetWhereInput = { AND: [scope, assetFilters(sp, warrantyDays)] };
   const { page, skip, take, size } = paging(sp);
   const now = new Date();
-  const [rows, total, inScope, available, reserved, warrantySoon, returned] = await Promise.all([
+  const [rows, total, viewByStatus, scopeByStatus, warrantySoon] = await Promise.all([
     prisma.asset.findMany({
       where,
       orderBy: [{ updatedAt: "desc" }],
@@ -71,13 +71,31 @@ export async function listAssets(user: CurrentUser, sp: SearchParams, warrantyDa
       },
     }),
     prisma.asset.count({ where }),
-    prisma.asset.count({ where: scope }),
-    prisma.asset.count({ where: { AND: [scope, { status: "AVAILABLE" }] } }),
-    prisma.asset.count({ where: { AND: [scope, { status: "RESERVED" }] } }),
+    prisma.asset.groupBy({ by: ["status"], where, _count: { _all: true } }),
+    prisma.asset.groupBy({ by: ["status"], where: scope, _count: { _all: true } }),
     prisma.asset.count({ where: { AND: [scope, warrantyWhere("soon", warrantyDays)] } }),
-    prisma.asset.count({ where: { AND: [scope, { status: "RETURNED" }] } }),
   ]);
-  return { rows, total, page, size, kpis: { inScope, available, reserved, warrantySoon, returned }, now };
+  const tally = (groups: { status: AssetStatus; _count: { _all: number } }[]) =>
+    Object.fromEntries(groups.map((g) => [g.status, g._count._all])) as Partial<Record<AssetStatus, number>>;
+  const inView = tally(viewByStatus);
+  const inScopeBy = tally(scopeByStatus);
+  const inScope = scopeByStatus.reduce((s, g) => s + g._count._all, 0);
+  return {
+    rows,
+    total,
+    page,
+    size,
+    kpis: {
+      inScope,
+      /** Status split of the assets matching the current filters. */
+      inView,
+      available: inScopeBy.AVAILABLE ?? 0,
+      reserved: inScopeBy.RESERVED ?? 0,
+      warrantySoon,
+      returned: inScopeBy.RETURNED ?? 0,
+    },
+    now,
+  };
 }
 
 /** Options for the asset filters and forms, limited to what the user may use. */

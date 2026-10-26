@@ -125,8 +125,29 @@
   select.inp { appearance: auto; }
   .skel { background: var(--at-chip); border-radius: var(--at-r2); animation: skel 1.4s ease-in-out infinite; }
   @keyframes skel { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+  /* StatTile: icon + label left, big number right, share bar + legend below */
+  .stat { gap: 12px; }
+  .stat-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+  .stat-txt { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .stat .v { font-size: 44px; }
+  .stat-ico { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; background: color-mix(in srgb, currentColor 12%, transparent); }
+  .stat-bar { height: 8px; border-radius: 999px; display: flex; gap: 2px; overflow: hidden; background: color-mix(in srgb, currentColor 12%, transparent); }
+  .stat-bar i { display: block; height: 100%; min-width: 4px; }
+  .stat-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; font-weight: 500; opacity: .85; }
+  .stat-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .stat-legend i { width: 9px; height: 9px; border-radius: 3px; flex: none; }
   .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .toolbar select.inp { width: auto; min-width: 150px; height: 44px; border-radius: var(--at-pill); }
+  /* field-sizing: fit the selected option, not the longest one (no blank gap after "Category: all"). */
+  .toolbar select.inp { width: auto; min-width: 0; field-sizing: content; height: 44px; border-radius: var(--at-pill); }
+  /* FilterSelect: pill trigger sized to its text; list always opens below and scrolls */
+  .fsel { width: auto; height: 44px; border-radius: var(--at-pill); display: inline-flex; align-items: center; gap: 10px; cursor: pointer; white-space: nowrap; text-align: left; }
+  .fsel svg { flex: none; opacity: .7; }
+  .fsel-pos { z-index: 60; outline: none; }
+  .fsel-pop { min-width: max(var(--anchor-width), 180px); max-height: min(340px, var(--available-height)); overflow-y: auto; padding: 6px; background: var(--at-card); color: var(--at-ink); border: 1px solid var(--at-line); border-radius: 18px; box-shadow: 0 12px 32px rgba(20, 20, 20, .14); outline: none; }
+  .fsel-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; border-radius: 12px; cursor: pointer; outline: none; font-size: 15px; }
+  .fsel-item[data-highlighted] { background: var(--at-chip); }
+  .fsel-item[data-selected] { font-weight: 600; }
+  .fsel-check { display: inline-flex; color: var(--at-accent); }
   .pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--at-line); flex-wrap: wrap; }
   .tabs { display: flex; flex-wrap: wrap; gap: 2px; background: var(--at-card); border-radius: var(--at-pill); padding: 5px; box-shadow: var(--at-shadow); border: var(--at-bw) solid var(--at-bc); width: fit-content; max-width: 100%; overflow-x: auto; }
   .tabs a { height: 38px; padding: 0 16px; border-radius: var(--at-pill); color: var(--at-ink); font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; }

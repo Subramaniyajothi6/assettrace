@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Boxes, CircleCheck, Plus, SearchCheck, ShieldAlert } from "lucide-react";
+import type { AssetStatus } from "@prisma/client";
 import { requireUser } from "@/server/permissions";
 import { getSettings } from "@/server/settings";
 import { assetFormOptions, listAssets } from "@/server/queries/assets";
@@ -11,7 +12,8 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Initials } from "@/components/Initials";
 import { WarrantyCell } from "@/components/WarrantyCell";
 import { CategoryIcon } from "@/components/CategoryIcon";
-import { CONDITION_LABELS, STATUS_LABELS } from "@/lib/labels";
+import { StatTile } from "@/components/StatTile";
+import { CONDITION_LABELS, STATUS_COLORS, STATUS_LABELS } from "@/lib/labels";
 import { param, type SearchParams } from "@/lib/list";
 
 export const metadata = { title: "Assets" };
@@ -24,12 +26,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
   const filtered = Object.keys(sp).some((k) => k !== "page" && param(sp, k));
   const years = Array.from({ length: 8 }, (_, i) => String(new Date().getFullYear() - i));
 
-  const k = [
-    { cls: "hero-dark", l: "In this view", v: total, s: `${kpis.inScope} in your scope` },
-    { cls: "hero-blue", l: "Ready to assign", v: kpis.available, s: `${kpis.reserved} reserved` },
-    { cls: "card", l: "Warranty ending soon", v: kpis.warrantySoon, s: `within ${warrantyAlertDays} days`, href: "/assets?warranty=soon" },
-    { cls: "card", l: "Not inspected after return", v: kpis.returned, s: "blocks reassignment", href: "/assets?status=RETURNED" },
-  ];
+  const statusOrder = Object.keys(STATUS_LABELS) as AssetStatus[];
 
   return (
     <>
@@ -48,24 +45,42 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
         }
       />
       <div className="kpis">
-        {k.map((x, i) => {
-          const body = (
-            <>
-              <span className="l">{x.l}</span>
-              <span className="v">{x.v}</span>
-              <span className="s muted">{x.s}</span>
-            </>
-          );
-          return x.href ? (
-            <Link key={x.l} href={x.href} className={`${x.cls} kpi lift rise`} style={{ animationDelay: `${80 + i * 60}ms` }}>
-              {body}
-            </Link>
-          ) : (
-            <div key={x.l} className={`${x.cls} kpi lift rise`} style={{ animationDelay: `${80 + i * 60}ms` }}>
-              {body}
-            </div>
-          );
-        })}
+        <StatTile
+          variant="dark"
+          icon={Boxes}
+          label="In this view"
+          value={total}
+          sub={`${kpis.inScope} in your scope`}
+          bar={{ total, segments: statusOrder.map((s) => ({ label: STATUS_LABELS[s], value: kpis.inView[s] ?? 0, color: STATUS_COLORS[s] })) }}
+          delay={80}
+        />
+        <StatTile
+          variant="blue"
+          icon={CircleCheck}
+          label="Ready to assign"
+          value={kpis.available}
+          sub={`${kpis.reserved} reserved`}
+          bar={{ total: kpis.inScope, segments: [{ label: "Available", value: kpis.available, color: STATUS_COLORS.AVAILABLE }] }}
+          delay={140}
+        />
+        <StatTile
+          icon={ShieldAlert}
+          label="Warranty ending soon"
+          value={kpis.warrantySoon}
+          sub={`within ${warrantyAlertDays} days`}
+          bar={{ total: kpis.inScope, segments: [{ label: "Ending soon", value: kpis.warrantySoon, color: STATUS_COLORS.UNDER_MAINTENANCE }] }}
+          href="/assets?warranty=soon"
+          delay={200}
+        />
+        <StatTile
+          icon={SearchCheck}
+          label="Not inspected after return"
+          value={kpis.returned}
+          sub="blocks reassignment"
+          bar={{ total: kpis.inScope, segments: [{ label: "Returned", value: kpis.returned, color: STATUS_COLORS.RETURNED }] }}
+          href="/assets?status=RETURNED"
+          delay={260}
+        />
       </div>
       <ListToolbar
         placeholder="Asset ID, serial no., name, brand or employee"

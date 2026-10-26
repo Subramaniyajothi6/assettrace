@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
+import { FilterSelect } from "./FilterSelect";
 
 export type FilterDef = { key: string; label: string; options: { value: string; label: string }[] };
 
@@ -46,20 +47,7 @@ export function ListToolbar({ placeholder = "Search", filters = [], children }: 
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} />
       </label>
       {filters.map((f) => (
-        <select
-          key={f.key}
-          className="inp"
-          aria-label={f.label}
-          value={sp.get(f.key) ?? ""}
-          onChange={(e) => push({ [f.key]: e.target.value || null })}
-        >
-          <option value="">{f.label}: all</option>
-          {f.options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        <FilterSelect key={f.key} label={f.label} value={sp.get(f.key) ?? ""} options={f.options} onChange={(v) => push({ [f.key]: v })} />
       ))}
       {active ? (
         <button

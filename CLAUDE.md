@@ -3,6 +3,9 @@
 Company asset lifecycle management MVP (internship assignment for Adz4needz).
 Goal: know what asset exists, where it is, who holds it, its condition, and its full history.
 
+**Every session:** `git pull` first, then read `docs/WORKLOG.md` (latest entry + open items) — the project is worked on
+from two machines synced through GitHub. Before finishing, add an entry to `docs/WORKLOG.md`, commit and push.
+
 Start with `HANDOFF.md` (status, decisions, first steps). The clickable prototype in `docs/prototype/`
 is the visual and behavioural reference for every page — match its layout, copy and flows.
 Read `docs/ARCHITECTURE.md` before any feature work. It is the source of truth for

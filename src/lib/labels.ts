@@ -79,6 +79,16 @@ export const ISSUE_STATUS_LABELS: Record<IssueStatus, string> = {
   CLOSED: "Closed",
 };
 
+/** Issue status order (its lifecycle) and colours for the progress bar on the Issues table. */
+export const ISSUE_STATUS_ORDER: IssueStatus[] = ["REPORTED", "UNDER_REVIEW", "MAINTENANCE", "RESOLVED", "CLOSED"];
+export const ISSUE_STATUS_COLORS: Record<IssueStatus, string> = {
+  REPORTED: "#3A6BB8",
+  UNDER_REVIEW: "#7C5CC4",
+  MAINTENANCE: "#D08A1E",
+  RESOLVED: "#3E8E5E",
+  CLOSED: "#8C8579",
+};
+
 export const MAINTENANCE_TYPE_LABELS: Record<MaintenanceType, string> = {
   REPAIR: "Repair",
   PREVENTIVE: "Preventive",

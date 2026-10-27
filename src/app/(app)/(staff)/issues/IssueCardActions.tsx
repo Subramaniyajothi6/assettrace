@@ -38,7 +38,7 @@ export function IssueCardActions({
   }
   if (status === "UNDER_REVIEW") {
     return (
-      <div className="gap8">
+      <div className="gap8" style={{ justifyContent: "flex-end", flexWrap: "nowrap" }}>
         {assetReturned ? (
           <small className="muted">Inspect the returned asset first.</small>
         ) : (
@@ -80,8 +80,8 @@ export function IssueCardActions({
   }
   if (status === "MAINTENANCE") {
     return maintenance ? (
-      <Link className="btn sm" href={`/maintenance?m=${maintenance.id}`}>
-        {maintenance.maintenanceNo} · complete it to resolve
+      <Link className="btn sm" href={`/maintenance?m=${maintenance.id}`} title="Completing the maintenance resolves this issue">
+        Complete {maintenance.maintenanceNo}
       </Link>
     ) : null;
   }

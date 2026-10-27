@@ -43,6 +43,9 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
   - Also: rename the employee items to the brief's names and add Notifications/Profile?
   - If Master data is split, keep Vendors as a tab on those pages and update `SECTION_ALIASES`.
 
+- [ ] **Form dates use the UTC day, not IST.** `new Date().toISOString().slice(0, 10)` is used as the default and the `max` date in `AssetForm`, `RetireForm`, `AssignForm`, `MaintenanceForm`, `maintenance/RowActions` and `ReceiveForm`. Between 00:00 and 05:30 IST this shows yesterday, and `max` blocks today's date (seen on 28 Oct: "Purchased 27 Oct" / "Since 27 Oct"). Use an Asia/Kolkata day helper instead.
+- [ ] **Assignments "Pending handover · 3" tab** counts pending + disputed (`handoverStatus != CONFIRMED`), while the "Waiting for signature" card shows only pending (2). Rename the tab to "Not confirmed", or make the counts match.
+- [ ] **Finish the lifecycle walkthrough** from Step 7 (see the 28 Oct entry).
 - [ ] **Run only one dev server at a time.** On 27 Oct the PC hit `EMAXCONNSESSION`. When the laptop checked, it had no server or node process running, yet all 15 slots were held (idle Supavisor clients). So they came from the PC side or processes that never closed. If it happens: `Get-Process node | Stop-Process -Force` on the machine that ran the server. A permanent fix would be the transaction pooler (port 6543 + `pgbouncer=true`) for `DATABASE_URL`.
 - [ ] **KPI tiles on other pages:** the Assets page and the Dashboard location rows now share one `StatusKey` colour key. Dashboard KPIs, Assignments, Maintenance, Users and employee Home still use the old `KpiCard`.
 - [ ] **Dashboard e2e not run** after the 27 Oct breakdown card change. `e2e/phase10-dashboards.spec.ts` was updated but not executed: the e2e suite reseeds the shared database.
@@ -56,6 +59,30 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 - [ ] **From HANDOFF/LOCAL_SECRETS:** Vercel deployment, README screenshots, Phase 13 enhancements (`docs/ENHANCEMENTS.md`).
 
 ## Log
+
+### 28 Oct 2026 — PC
+Pulled the laptop's `e024baa` and `176bda2`. The user is walking through the full asset lifecycle by hand, one step at a time, with a test asset **AST-LAP-0017 "Flow Test Laptop"** (serial `FLOWTEST001`, Engineering, Chennai HQ), assigned to Arun Kumar.
+- Done so far: register → assign → employee signed the handover → employee reported **ISS-0037** (High, Battery) → manager reviewed it and sent it to maintenance as **MNT-0017**.
+- **Next:** Step 7, complete MNT-0017. Then return request → receive → inspection → retire → check history, notifications, reports and the admin view.
+
+**Fixes found during the walkthrough**
+- **Assign form:** the employee search box was 260px tall, because the toolbar `.search` rule (`flex: 1 1 260px`) applied in a column. Fixed with `flex: none` there.
+- **Toasts:** restyled app-wide (`src/components/ui/sonner.tsx` + unlayered `.at-toast` rules in `globals.css`). Dark hero card (inverts in dark mode), Urbanist font, round tinted icon per type, bold title + softer description, small close button at the top right. `richColors` was removed from `<Toaster>`.
+  - `ActionForm`'s `success` can now return `{ title, description }`. The assign form uses it: "Assigned to Arun Kumar" / "AST-LAP-0017 · waiting for their signature on the handover".
+- **Issues page:** the 5-column kanban was replaced by a **table with progress** (option H, picked from mock-ups A–H).
+  - Tabs: **Open** (Reported, Under review, Maintenance), Resolved, Closed, All, each with a count.
+  - Sortable Severity / Reported (newest or oldest) / Status, plus pagination.
+  - A 5-step progress bar (`.pipe`) under each status. A "Fix:" line shows the resolution.
+  - The maintenance button reads "Complete MNT-00xx".
+  - New `ISSUE_STATUS_ORDER` and `ISSUE_STATUS_COLORS` in `labels.ts`.
+  - The kanban CSS in `skins.css` is now unused (the file was left as generated). The page title is "Issues", and the Requests page link was renamed to match.
+  - `e2e/phase6-issues-requests.spec.ts` now targets table rows and switches to the Resolved tab before closing (not run).
+- **List toolbar search (all list pages):** white pill with a border (it had blended into the page background), max 460px wide, and a focus ring. The browser's blue × is hidden, and the app's own round × clears the search.
+- **Vendor dropdown "empty":** not a bug. The first option is "—" (optional field), and the 5 vendors are below it.
+- **CSS note:** `skins.css` is imported unlayered, so overrides of its rules must also be unlayered. Rules inside `@layer components` lose to it.
+
+**Checked**
+- `tsc` and `eslint` are clean. The user checked the assign form, the toasts and the Issues table in the browser. Not run: `npm run build`, e2e.
 
 ### 27 Oct 2026 — laptop (evening)
 - **Assets list:** the "With" column is now "Assigned to" (also on the QR scan result page).

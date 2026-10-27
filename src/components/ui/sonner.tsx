@@ -28,17 +28,19 @@ const Toaster = ({ ...props }: ToasterProps) => {
           <Loader2Icon className="size-4 animate-spin" />
         ),
       }}
+      // Dark "hero" card from the skin (inverts in dark mode); details in globals.css (.at-toast).
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--normal-bg": "var(--at-hd)",
+          "--normal-text": "var(--at-hd-ink)",
+          "--normal-border": "transparent",
+          "--border-radius": "var(--at-r2)",
+          "--width": "380px",
         } as React.CSSProperties
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
+          toast: "at-toast",
         },
       }}
       {...props}

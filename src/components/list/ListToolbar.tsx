@@ -45,6 +45,11 @@ export function ListToolbar({ placeholder = "Search", filters = [], children }: 
         <Search size={18} aria-hidden="true" />
         <span className="sr">{placeholder}</span>
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} />
+        {q ? (
+          <button type="button" className="search-clear" aria-label="Clear search" onClick={() => setQ("")}>
+            <X size={14} />
+          </button>
+        ) : null}
       </label>
       {filters.map((f) => (
         <FilterSelect key={f.key} label={f.label} value={sp.get(f.key) ?? ""} options={f.options} onChange={(v) => push({ [f.key]: v })} />

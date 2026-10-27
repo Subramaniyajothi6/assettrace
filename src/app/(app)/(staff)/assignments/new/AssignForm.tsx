@@ -58,7 +58,7 @@ export function AssignForm({
   return (
     <ActionForm
       action={assignAction}
-      success={(d) => `${d.tag} assigned to ${d.name}. Waiting for their signature.`}
+      success={(d) => ({ title: `Assigned to ${d.name}`, description: `${d.tag} · waiting for their signature on the handover` })}
       redirectTo="/assignments"
       className="row"
     >
@@ -89,7 +89,8 @@ export function AssignForm({
 
         <section className="card pad rise" style={{ animationDelay: "60ms", display: "flex", flexDirection: "column", gap: 12 }}>
           <h2 className="h2">2 · Employee</h2>
-          <label className="search">
+          {/* .search is sized for toolbar rows (flex: 1 1 260px); in this column it would grow 260px tall. */}
+          <label className="search" style={{ flex: "none" }}>
             <Search size={17} aria-hidden="true" />
             <span className="sr">Search employees</span>
             <input type="search" placeholder="Name, employee code or department" value={q} onChange={(e) => setQ(e.target.value)} />

@@ -77,7 +77,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
         title="Employee requests"
         actions={
           <Link className="btn" href="/issues">
-            Issue board
+            Issues
           </Link>
         }
       />

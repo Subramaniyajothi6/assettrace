@@ -24,7 +24,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <ThemeProvider allowDark={skinHasDark(uiSkin)}>
           {children}
-          <Toaster position="bottom-right" richColors closeButton />
+          <Toaster position="bottom-right" closeButton />
         </ThemeProvider>
       </body>
     </html>

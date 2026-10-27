@@ -4,16 +4,47 @@ import { prisma } from "@/server/db";
 import { managedAssetScope, requireUser } from "@/server/permissions";
 import { PageHeader } from "@/components/PageHeader";
 import { ListToolbar } from "@/components/list/ListToolbar";
+import { Pagination } from "@/components/list/Pagination";
+import { TableCard } from "@/components/list/TableCard";
 import { formatDate } from "@/lib/format";
-import { ISSUE_CATEGORY_LABELS, ISSUE_STATUS_LABELS, SEVERITY_LABELS } from "@/lib/labels";
-import { ilike, param, type SearchParams } from "@/lib/list";
+import { ISSUE_CATEGORY_LABELS, ISSUE_STATUS_COLORS, ISSUE_STATUS_LABELS, ISSUE_STATUS_ORDER, SEVERITY_LABELS } from "@/lib/labels";
+import { ilike, paging, param, type SearchParams } from "@/lib/list";
 import { IssueCardActions } from "./IssueCardActions";
 
-export const metadata = { title: "Issue board" };
+export const metadata = { title: "Issues" };
 
-const COLUMNS: IssueStatus[] = ["REPORTED", "UNDER_REVIEW", "MAINTENANCE", "RESOLVED", "CLOSED"];
 const SEV = { CRITICAL: "#B4232F", HIGH: "#D2643E", MEDIUM: "#D08A1E", LOW: "#9AA6B2" } as const;
-const CLOSED_LIMIT = 10;
+
+const TABS = ["open", "resolved", "closed", "all"] as const;
+type Tab = (typeof TABS)[number];
+const TAB_STATUS: Record<Tab, IssueStatus[] | null> = {
+  open: ["REPORTED", "UNDER_REVIEW", "MAINTENANCE"],
+  resolved: ["RESOLVED"],
+  closed: ["CLOSED"],
+  all: null,
+};
+const TAB_LABEL: Record<Tab, string> = { open: "Open", resolved: "Resolved", closed: "Closed", all: "All" };
+
+// Enum order in the schema: Severity LOW→CRITICAL, IssueStatus REPORTED→CLOSED.
+const SORTS = {
+  new: [{ reportedAt: "desc" }],
+  old: [{ reportedAt: "asc" }],
+  severity: [{ severity: "desc" }, { reportedAt: "desc" }],
+  status: [{ status: "asc" }, { reportedAt: "desc" }],
+} satisfies Record<string, Prisma.AssetIssueOrderByWithRelationInput[]>;
+type Sort = keyof typeof SORTS;
+
+/** Five-step bar: steps done in ink, the current step in its status colour. */
+function Progress({ status }: { status: IssueStatus }) {
+  const at = ISSUE_STATUS_ORDER.indexOf(status);
+  return (
+    <span className="pipe" role="img" aria-label={`Step ${at + 1} of ${ISSUE_STATUS_ORDER.length}: ${ISSUE_STATUS_LABELS[status]}`}>
+      {ISSUE_STATUS_ORDER.map((s, k) => (
+        <i key={s} style={{ background: k < at ? "var(--at-ink)" : k === at ? ISSUE_STATUS_COLORS[status] : undefined }} />
+      ))}
+    </span>
+  );
+}
 
 export default async function IssuesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser();
@@ -21,38 +52,73 @@ export default async function IssuesPage({ searchParams }: { searchParams: Promi
   const q = param(sp, "q");
   const severity = param(sp, "severity");
   const category = param(sp, "category");
+  const tab: Tab = TABS.includes(param(sp, "tab") as Tab) ? (param(sp, "tab") as Tab) : "open";
+  const sort: Sort = (param(sp, "sort") as Sort) in SORTS ? (param(sp, "sort") as Sort) : "new";
+  const { page, skip, take, size } = paging(sp);
+
   const where: Prisma.AssetIssueWhereInput = {
     AND: [
       { asset: managedAssetScope(user) },
       severity ? { severity: severity as Prisma.EnumSeverityFilter["equals"] } : {},
       category ? { category: category as Prisma.EnumIssueCategoryFilter["equals"] } : {},
-      q ? { OR: [{ issueNo: ilike(q) }, { title: ilike(q) }, { asset: { assetTag: ilike(q) } }, { reportedBy: { name: ilike(q) } }] } : {},
+      q ? { OR: [{ issueNo: ilike(q) }, { title: ilike(q) }, { asset: { assetTag: ilike(q) } }, { asset: { name: ilike(q) } }, { reportedBy: { name: ilike(q) } }] } : {},
     ],
   };
-  const [issues, closedCount, maint] = await Promise.all([
+  const inTab = (t: Tab): Prisma.AssetIssueWhereInput => (TAB_STATUS[t] ? { AND: [where, { status: { in: TAB_STATUS[t]! } }] } : where);
+
+  const [issues, total, counts] = await Promise.all([
     prisma.assetIssue.findMany({
-      where: { AND: [where, { status: { not: "CLOSED" } }] },
-      orderBy: [{ reportedAt: "desc" }],
+      where: inTab(tab),
+      orderBy: SORTS[sort],
+      skip,
+      take,
       include: { asset: { select: { id: true, name: true, assetTag: true, status: true } }, reportedBy: { select: { name: true } } },
     }),
-    prisma.assetIssue.count({ where: { AND: [where, { status: "CLOSED" }] } }),
-    prisma.maintenanceRecord.findMany({ where: { issue: where, status: { in: ["SCHEDULED", "IN_PROGRESS"] } }, select: { id: true, issueId: true, maintenanceNo: true } }),
+    prisma.assetIssue.count({ where: inTab(tab) }),
+    Promise.all(TABS.map((t) => prisma.assetIssue.count({ where: inTab(t) }))),
   ]);
-  const closed = await prisma.assetIssue.findMany({
-    where: { AND: [where, { status: "CLOSED" }] },
-    orderBy: { reportedAt: "desc" },
-    take: CLOSED_LIMIT,
-    include: { asset: { select: { id: true, name: true, assetTag: true, status: true } }, reportedBy: { select: { name: true } } },
+  const maint = await prisma.maintenanceRecord.findMany({
+    where: { issueId: { in: issues.map((i) => i.id) }, status: { in: ["SCHEDULED", "IN_PROGRESS"] } },
+    select: { id: true, issueId: true, maintenanceNo: true },
   });
-  const all = [...issues, ...closed];
   const maintByIssue = new Map(maint.map((m) => [m.issueId, m]));
+
+  const href = (patch: Record<string, string | null>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(sp)) if (typeof v === "string" && v && k !== "page") p.set(k, v);
+    for (const [k, v] of Object.entries(patch)) {
+      if (v) p.set(k, v);
+      else p.delete(k);
+    }
+    const s = p.toString();
+    return s ? `/issues?${s}` : "/issues";
+  };
+  const SortTh = ({ label, by, alt }: { label: string; by: Sort; alt?: Sort }) => {
+    const on = sort === by || sort === alt;
+    const nextSort = on && alt ? (sort === by ? alt : by) : by;
+    return (
+      <th aria-sort={on ? (sort === "old" ? "ascending" : "descending") : undefined}>
+        <Link href={href({ sort: nextSort === "new" ? null : nextSort })} style={{ color: "inherit", textDecoration: "none", whiteSpace: "nowrap" }}>
+          {label} <span style={{ opacity: on ? 1 : 0.35 }}>{on && sort === "old" ? "↑" : "↓"}</span>
+        </Link>
+      </th>
+    );
+  };
 
   return (
     <>
       <PageHeader
         crumbs={[{ label: "Requests", href: "/requests" }, { label: "Issues" }]}
-        title="Issue board"
-        actions={<span className="muted">Move an issue forward with the button on its card</span>}
+        title="Issues"
+        actions={
+          <nav className="tabs" aria-label="Issue views">
+            {TABS.map((t, k) => (
+              <Link key={t} href={href({ tab: t === "open" ? null : t })} aria-current={t === tab ? "page" : undefined}>
+                {TAB_LABEL[t]} · {counts[k]}
+              </Link>
+            ))}
+          </nav>
+        }
       />
       <ListToolbar
         placeholder="Issue no., title, asset or employee"
@@ -61,46 +127,65 @@ export default async function IssuesPage({ searchParams }: { searchParams: Promi
           { key: "category", label: "Category", options: Object.entries(ISSUE_CATEGORY_LABELS).map(([value, label]) => ({ value, label })) },
         ]}
       />
-      <div className="tw" style={{ paddingBottom: 6 }}>
-        <div className="kanban">
-          {COLUMNS.map((s, k) => {
-            const items = all.filter((i) => i.status === s);
-            const count = s === "CLOSED" ? closedCount : items.length;
-            return (
-              <section key={s} className="col rise" style={{ animationDelay: `${k * 60}ms` }} aria-label={ISSUE_STATUS_LABELS[s]}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 6px" }}>
-                  <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>{ISSUE_STATUS_LABELS[s]}</h2>
-                  <span className="pill s-mute" style={{ padding: "2px 9px" }}>
-                    {count}
-                  </span>
-                </div>
-                {items.map((i) => (
-                  <article key={i.id} className="icard" style={{ borderLeftColor: SEV[i.severity] }}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span className="tag">{i.issueNo}</span>
-                      <b style={{ fontSize: 12, color: SEV[i.severity] }}>{SEVERITY_LABELS[i.severity]}</b>
-                    </div>
-                    <b style={{ fontSize: 15, lineHeight: 1.3 }}>{i.title}</b>
-                    <small className="muted">
-                      <Link href={`/assets/${i.asset.id}?tab=issues`} style={{ color: "inherit" }}>
-                        {i.asset.name}
-                      </Link>{" "}
-                      · {i.reportedBy.name} · {formatDate(i.reportedAt)}
-                    </small>
-                    {i.resolution ? <small style={{ color: "var(--at-soft)" }}>{i.resolution}</small> : null}
-                    <span className="pill s-mute" style={{ alignSelf: "flex-start" }}>
-                      {ISSUE_CATEGORY_LABELS[i.category]}
-                    </span>
-                    <IssueCardActions id={i.id} no={i.issueNo} status={i.status} maintenance={maintByIssue.get(i.id) ?? null} assetReturned={i.asset.status === "RETURNED"} />
-                  </article>
-                ))}
-                {s === "CLOSED" && closedCount > CLOSED_LIMIT ? <small className="muted" style={{ padding: "0 6px" }}>Showing the latest {CLOSED_LIMIT}.</small> : null}
-                {!items.length ? <small className="muted" style={{ padding: "0 6px" }}>Nothing here.</small> : null}
-              </section>
-            );
-          })}
-        </div>
-      </div>
+      <TableCard
+        head={
+          <>
+            <th>Issue</th>
+            <th>Problem</th>
+            <SortTh label="Severity" by="severity" />
+            <th>Category</th>
+            <SortTh label="Reported" by="new" alt="old" />
+            <SortTh label="Status" by="status" />
+            <th aria-label="Next step" />
+          </>
+        }
+        empty={
+          tab === "open" && !q && !severity && !category
+            ? { title: "No open issues", text: "Issues employees report show up here." }
+            : { title: "No issues match", text: "Try another tab, or clear the search and filters." }
+        }
+        rows={issues.map((i) => (
+          <tr key={i.id}>
+            <td>
+              <span className="tag">{i.issueNo}</span>
+            </td>
+            <td style={{ minWidth: 260 }}>
+              <b style={{ display: "block" }}>{i.title}</b>
+              <small className="muted">
+                <Link href={`/assets/${i.asset.id}?tab=issues`} style={{ color: "inherit" }}>
+                  {i.asset.name}
+                </Link>{" "}
+                · {i.reportedBy.name}
+              </small>
+              {i.resolution ? (
+                <small style={{ display: "block", color: "var(--at-soft)" }}>
+                  <b>Fix:</b> {i.resolution}
+                </small>
+              ) : null}
+            </td>
+            <td>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700, fontSize: 13, color: SEV[i.severity], whiteSpace: "nowrap" }}>
+                <i style={{ width: 8, height: 8, borderRadius: "50%", background: SEV[i.severity] }} aria-hidden="true" />
+                {SEVERITY_LABELS[i.severity]}
+              </span>
+            </td>
+            <td>
+              <span className="pill s-mute">{ISSUE_CATEGORY_LABELS[i.category]}</span>
+            </td>
+            <td style={{ whiteSpace: "nowrap" }}>{formatDate(i.reportedAt)}</td>
+            <td>
+              <span style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <b style={{ fontSize: 13, whiteSpace: "nowrap" }}>{ISSUE_STATUS_LABELS[i.status]}</b>
+                <Progress status={i.status} />
+              </span>
+            </td>
+            <td style={{ textAlign: "right" }}>
+              <IssueCardActions id={i.id} no={i.issueNo} status={i.status} maintenance={maintByIssue.get(i.id) ?? null} assetReturned={i.asset.status === "RETURNED"} />
+            </td>
+          </tr>
+        ))}
+        footer={<Pagination basePath="/issues" sp={sp} page={page} size={size} total={total} />}
+      />
     </>
   );
 }

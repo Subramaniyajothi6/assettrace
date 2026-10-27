@@ -15,10 +15,12 @@ export type AnyResult = ActionResult<any>;
 /** The success payload of an action result type. */
 export type DataOf<R> = R extends { ok: true; data: infer D } ? D : never;
 
+export type ToastMsg = string | { title: string; description?: string };
+
 type Props<R extends AnyResult, T = DataOf<R>> = {
   action: (fd: FormData) => Promise<R>;
-  /** Toast text on success. */
-  success?: string | ((data: T) => string);
+  /** Toast on success: a line of text, or a bold title with a detail line. */
+  success?: ToastMsg | ((data: T) => ToastMsg);
   /** Navigate after success; otherwise the page is refreshed. */
   redirectTo?: string | ((data: T) => string);
   onSuccess?: (data: T) => void;
@@ -62,7 +64,11 @@ export function ActionForm<R extends AnyResult>({ action, success, redirectTo, o
         return;
       }
       setErrors({});
-      if (success) toast.success(typeof success === "function" ? success(res.data) : success);
+      if (success) {
+        const msg = typeof success === "function" ? success(res.data) : success;
+        if (typeof msg === "string") toast.success(msg);
+        else toast.success(msg.title, { description: msg.description });
+      }
       if (resetOnSuccess) form.reset();
       onSuccess?.(res.data);
       if (redirectTo) router.push(typeof redirectTo === "function" ? redirectTo(res.data) : redirectTo);

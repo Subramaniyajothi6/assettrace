@@ -25,7 +25,7 @@ test("employee reports an issue → manager reviews and sends it to maintenance"
   const mgr = await browser.newPage();
   await login(mgr, "manager");
   await mgr.goto("/issues");
-  const card = mgr.locator("article.icard").filter({ hasText: issue.issueNo });
+  const card = mgr.locator("tbody tr").filter({ hasText: issue.issueNo });
   await card.getByRole("button", { name: "Start review" }).click();
   await mgr.getByRole("alertdialog").getByRole("button", { name: "Start review" }).click();
   await toast(mgr, `${issue.issueNo} moved to Under review`);
@@ -47,12 +47,14 @@ test("manager resolves an issue directly and closes it; the request follows", as
   const issue = await db.assetIssue.findUniqueOrThrow({ where: { issueNo: "ISS-0035" } });
   await login(page, "manager");
   await page.goto("/issues");
-  const card = page.locator("article.icard").filter({ hasText: "ISS-0035" });
+  const card = page.locator("tbody tr").filter({ hasText: "ISS-0035" });
   await card.getByRole("button", { name: "Mark resolved" }).click();
   await page.getByRole("dialog").getByLabel("What fixed it? *").fill("Updated the Wi-Fi driver");
   await page.getByRole("dialog").getByRole("button", { name: "Mark resolved" }).click();
   await toast(page, "ISS-0035 resolved");
   expect((await db.employeeRequest.findUniqueOrThrow({ where: { issueId: issue.id } })).status).toBe("COMPLETED");
+  // Resolved issues leave the Open tab
+  await page.getByRole("link", { name: /^Resolved · / }).click();
   await card.getByRole("button", { name: "Close issue" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Close issue" }).click();
   await toast(page, "ISS-0035 closed");

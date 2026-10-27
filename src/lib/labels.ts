@@ -209,6 +209,9 @@ export const STATUS_TONES: Record<string, Tone> = {
   INSPECTED: "mute",
 };
 
+/** Segment and legend order in status-split bars: in use first, problems last. */
+export const STATUS_ORDER: AssetStatus[] = ["ASSIGNED", "AVAILABLE", "UNDER_MAINTENANCE", "RESERVED", "RETURNED", "DAMAGED", "LOST", "RETIRED"];
+
 /** Solid status colours for charts and the location grid squares. */
 export const STATUS_COLORS: Record<AssetStatus, string> = {
   ASSIGNED: "#3A6BB8",

@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type StatSegment = { label: string; value: number; color: string };
+/** `color` defaults to the tile's ink colour (used for single "X of total" shares). */
+export type StatSegment = { label: string; value: number; color?: string };
 
 type Props = {
   label: string;
@@ -12,15 +13,34 @@ type Props = {
   icon: LucideIcon;
   /** "dark" and "blue" are the hero cards; one of each per row. */
   variant?: "card" | "dark" | "blue";
-  /** Coloured bar under the header. Segments are drawn against `total`; each gets a legend entry. */
-  bar?: { segments: StatSegment[]; total: number };
+  /**
+   * Bar under the header, drawn against `total`. Several segments = a status split (pair the tiles with a
+   * <StatusKey>); one segment = a share, captioned "9 of 34 {of}".
+   */
+  bar?: { segments: StatSegment[]; total: number; of?: string };
   href?: string;
   delay?: number;
 };
 
 const VARIANT = { card: "card", dark: "hero-dark", blue: "hero-blue" } as const;
 
-/** KPI tile: icon + label on the left, big number on the right, optional share bar with a legend. */
+/** One colour key for a row of status-split bars (tiles, location rows). Lists the statuses given, in order. */
+export function StatusKey({ items, label, className }: { items: { label: string; color: string }[]; label?: string; className?: string }) {
+  if (!items.length) return null;
+  return (
+    <div className={cn("status-key", className)}>
+      {label ? <b>{label}:</b> : null}
+      {items.map((s) => (
+        <span key={s.label}>
+          <i style={{ background: s.color }} aria-hidden="true" />
+          {s.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** KPI tile: icon + label on the left, big number on the right, optional bar (status split or single share). */
 export function StatTile({ label, value, sub, icon: Icon, variant = "card", bar, href, delay = 0 }: Props) {
   const segments = bar?.segments.filter((s) => s.value > 0) ?? [];
   const body = (
@@ -41,22 +61,16 @@ export function StatTile({ label, value, sub, icon: Icon, variant = "card", bar,
         <>
           <div className="stat-bar" role="img" aria-label={segments.map((s) => `${s.label} ${s.value}`).join(", ") || "None"}>
             {segments.map((s) => (
-              <i key={s.label} style={{ width: `${bar.total ? (s.value / bar.total) * 100 : 0}%`, background: s.color }} />
+              <i key={s.label} title={`${s.label} ${s.value}`} style={{ width: `${bar.total ? (s.value / bar.total) * 100 : 0}%`, background: s.color ?? "currentColor" }} />
             ))}
           </div>
-          <div className="stat-legend">
-            {segments.length ? (
-              segments.map((s) => (
-                <span key={s.label}>
-                  <i style={{ background: s.color }} aria-hidden="true" />
-                  {s.label} {s.value}
-                  {bar.segments.length === 1 ? ` of ${bar.total}` : ""}
-                </span>
-              ))
-            ) : (
-              <span>None of {bar.total}</span>
-            )}
-          </div>
+          {/* A split bar's colours are explained by one shared key outside the tiles; a single share just says "9 of 34". */}
+          {bar.segments.length === 1 ? (
+            <span className="stat-cap">
+              {bar.segments[0].value} of {bar.total}
+              {bar.of ? ` ${bar.of}` : ""}
+            </span>
+          ) : null}
         </>
       ) : null}
     </>

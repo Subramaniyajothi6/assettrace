@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Boxes, CircleCheck, Plus, SearchCheck, ShieldAlert } from "lucide-react";
-import type { AssetStatus } from "@prisma/client";
 import { requireUser } from "@/server/permissions";
 import { getSettings } from "@/server/settings";
 import { assetFormOptions, listAssets } from "@/server/queries/assets";
@@ -12,8 +11,8 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Initials } from "@/components/Initials";
 import { WarrantyCell } from "@/components/WarrantyCell";
 import { CategoryIcon } from "@/components/CategoryIcon";
-import { StatTile } from "@/components/StatTile";
-import { CONDITION_LABELS, STATUS_COLORS, STATUS_LABELS } from "@/lib/labels";
+import { StatTile, StatusKey } from "@/components/StatTile";
+import { CONDITION_LABELS, STATUS_COLORS, STATUS_LABELS, STATUS_ORDER } from "@/lib/labels";
 import { param, type SearchParams } from "@/lib/list";
 
 export const metadata = { title: "Assets" };
@@ -26,7 +25,6 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
   const filtered = Object.keys(sp).some((k) => k !== "page" && param(sp, k));
   const years = Array.from({ length: 8 }, (_, i) => String(new Date().getFullYear() - i));
 
-  const statusOrder = Object.keys(STATUS_LABELS) as AssetStatus[];
 
   return (
     <>
@@ -51,7 +49,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
           label="In this view"
           value={total}
           sub={`${kpis.inScope} in your scope`}
-          bar={{ total, segments: statusOrder.map((s) => ({ label: STATUS_LABELS[s], value: kpis.inView[s] ?? 0, color: STATUS_COLORS[s] })) }}
+          bar={{ total, segments: STATUS_ORDER.map((s) => ({ label: STATUS_LABELS[s], value: kpis.inView[s] ?? 0, color: STATUS_COLORS[s] })) }}
           delay={80}
         />
         <StatTile
@@ -60,7 +58,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
           label="Ready to assign"
           value={kpis.available}
           sub={`${kpis.reserved} reserved`}
-          bar={{ total: kpis.inScope, segments: [{ label: "Available", value: kpis.available, color: STATUS_COLORS.AVAILABLE }] }}
+          bar={{ total: kpis.inScope, of: "in scope", segments: [{ label: "Available", value: kpis.available }] }}
           delay={140}
         />
         <StatTile
@@ -68,7 +66,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
           label="Warranty ending soon"
           value={kpis.warrantySoon}
           sub={`within ${warrantyAlertDays} days`}
-          bar={{ total: kpis.inScope, segments: [{ label: "Ending soon", value: kpis.warrantySoon, color: STATUS_COLORS.UNDER_MAINTENANCE }] }}
+          bar={{ total: kpis.inScope, of: "in scope", segments: [{ label: "Ending soon", value: kpis.warrantySoon }] }}
           href="/assets?warranty=soon"
           delay={200}
         />
@@ -77,11 +75,15 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
           label="Not inspected after return"
           value={kpis.returned}
           sub="blocks reassignment"
-          bar={{ total: kpis.inScope, segments: [{ label: "Returned", value: kpis.returned, color: STATUS_COLORS.RETURNED }] }}
+          bar={{ total: kpis.inScope, of: "in scope", segments: [{ label: "Returned", value: kpis.returned }] }}
           href="/assets?status=RETURNED"
           delay={260}
         />
       </div>
+      <StatusKey
+        label="In this view"
+        items={STATUS_ORDER.filter((s) => kpis.inView[s]).map((s) => ({ label: `${STATUS_LABELS[s]} ${kpis.inView[s]}`, color: STATUS_COLORS[s] }))}
+      />
       <ListToolbar
         placeholder="Asset ID, serial no., name, brand or employee"
         filters={[

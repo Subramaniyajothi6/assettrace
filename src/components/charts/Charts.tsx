@@ -4,13 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { AssetStatus } from "@prisma/client";
-import { STATUS_COLORS, STATUS_LABELS } from "@/lib/labels";
+import { STATUS_COLORS, STATUS_LABELS, STATUS_ORDER } from "@/lib/labels";
 import type { BreakdownGroup } from "@/server/queries/dashboard";
 
-/** Segment order in status-split bars: in use first, problems last (matches the location bars). */
-const STATUS_ORDER: AssetStatus[] = ["ASSIGNED", "AVAILABLE", "UNDER_MAINTENANCE", "RESERVED", "RETURNED", "DAMAGED", "LOST", "RETIRED"];
 
-export type Point = { label: string; value: number };
+/** `full` is the longer label used in the table, e.g. "May 2026" for a "May" axis tick. */
+export type Point = { label: string; value: number; full?: string };
 
 // Single-series charts use one accent from the active skin; text stays in ink tokens.
 const ACCENT = "var(--at-accent)";
@@ -36,25 +35,40 @@ const tip = (fmt: (n: number) => string) =>
     return <TipBox label={String(payload[0].payload?.label ?? label)} value={fmt(Number(payload[0].value ?? 0))} />;
   };
 
-/** Data table behind a chart (accessible alternative, CLAUDE/dataviz rule). */
-function TableView({ data, unit }: { data: Point[]; unit: (n: number) => string }) {
+/**
+ * Data table behind a chart (accessible alternative, CLAUDE/dataviz rule).
+ * Lists only the points with a value, then a total, and says how many empty points were left out.
+ */
+function TableView({ data, unit, zeroText }: { data: Point[]; unit: (n: number) => string; zeroText: string }) {
+  const rows = data.filter((d) => d.value);
+  const empty = data.length - rows.length;
+  const total = rows.reduce((s, d) => s + d.value, 0);
   return (
     <details style={{ fontSize: 13 }}>
       <summary className="muted" style={{ cursor: "pointer", width: "fit-content" }}>
         Show as table
       </summary>
-      <table className="tbl" style={{ fontSize: 13, marginTop: 6 }}>
+      <table className="tbl chart-table">
         <tbody>
-          {data.map((d) => (
-            <tr key={d.label}>
-              <td>{d.label}</td>
-              <td className="num" style={{ textAlign: "right" }}>
-                {unit(d.value)}
-              </td>
+          {rows.map((d) => (
+            <tr key={d.full ?? d.label}>
+              <td>{d.full ?? d.label}</td>
+              <td className="num">{unit(d.value)}</td>
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td className="num">{unit(total)}</td>
+          </tr>
+        </tfoot>
       </table>
+      {empty ? (
+        <small className="muted">
+          {empty} {empty === 1 ? "month" : "months"} with {zeroText} not shown.
+        </small>
+      ) : null}
     </details>
   );
 }
@@ -72,8 +86,22 @@ export function ChartCard({ title, sub, children, className = "", style }: { tit
 }
 
 /** Vertical columns over time (one series). */
-export function ColumnChart({ data, money, height = 200 }: { data: Point[]; money?: boolean; height?: number }) {
-  const fmt = money ? inr : (n: number) => n.toLocaleString("en-IN");
+export function ColumnChart({
+  data,
+  money,
+  height = 200,
+  zeroText = "nothing",
+  unit,
+}: {
+  data: Point[];
+  money?: boolean;
+  height?: number;
+  /** Table note for empty months: "10 months with {zeroText} not shown". */
+  zeroText?: string;
+  /** Singular/plural noun after counts, e.g. ["asset", "assets"]. */
+  unit?: [string, string];
+}) {
+  const fmt = money ? inr : (n: number) => `${n.toLocaleString("en-IN")}${unit ? ` ${n === 1 ? unit[0] : unit[1]}` : ""}`;
   if (data.every((d) => !d.value)) return <EmptyChart />;
   return (
     <>
@@ -88,7 +116,7 @@ export function ColumnChart({ data, money, height = 200 }: { data: Point[]; mone
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <TableView data={data} unit={fmt} />
+      <TableView data={data} unit={fmt} zeroText={zeroText} />
     </>
   );
 }
@@ -116,7 +144,7 @@ export function TrendChart({ data, height = 200, unit = "events" }: { data: Poin
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      <TableView data={data} unit={fmt} />
+      <TableView data={data} unit={fmt} zeroText="no activity" />
     </>
   );
 }

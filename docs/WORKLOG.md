@@ -31,7 +31,8 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 
 ## Open items
 
-- [ ] **Run only one dev server at a time.** On 27 Oct the PC hit `EMAXCONNSESSION` while something else (probably the laptop's server) still held pool slots. Stop the server on one machine before starting it on the other. A permanent fix would be the transaction pooler (port 6543 + `pgbouncer=true`) for `DATABASE_URL`.
+- [ ] **Run only one dev server at a time.** On 27 Oct the PC hit `EMAXCONNSESSION`. When the laptop checked, it had no server or node process running, yet all 15 slots were held (idle Supavisor clients). So they came from the PC side or processes that never closed. If it happens: `Get-Process node | Stop-Process -Force` on the machine that ran the server. A permanent fix would be the transaction pooler (port 6543 + `pgbouncer=true`) for `DATABASE_URL`.
+- [ ] **KPI tiles on other pages:** the Assets page and the Dashboard location rows now share one `StatusKey` colour key. Dashboard KPIs, Assignments, Maintenance, Users and employee Home still use the old `KpiCard`.
 - [ ] **Dashboard e2e not run** after the 27 Oct breakdown card change. `e2e/phase10-dashboards.spec.ts` was updated but not executed: the e2e suite reseeds the shared database.
 - [ ] **KPI cards (new StatTile style):** only the Assets page uses them so far. Dashboard, Assignments, Maintenance, Users and employee Home still have the old cards, and each needs its own choice of what the bar shows.
 - [ ] **Form dropdowns** (Register asset, Assign, etc.) are still native `<select>` and can open upwards in short windows. The toolbar filters are already fixed. Switch the forms to `FilterSelect`-style dropdowns?
@@ -43,6 +44,27 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 - [ ] **From HANDOFF/LOCAL_SECRETS:** Vercel deployment, README screenshots, Phase 13 enhancements (`docs/ENHANCEMENTS.md`).
 
 ## Log
+
+### 27 Oct 2026 — laptop (afternoon)
+Pulled the PC's `dd85718` (breakdown card). The user picked each change below from a mock-up shown as an artifact.
+
+**Dashboard chart tables** (option C)
+- "Show as table" under each chart (Maintenance cost, Warranty expiry, Monthly transactions, Purchases) lists only months with a value, labelled with the year ("May 2026"), then a bold Total row and a note such as "10 months with no cost not shown".
+- `Point.full` carries the month+year label (`monthYearLabel` in `src/server/queries/dashboard.ts`). `ColumnChart` takes `zeroText` and `unit` (warranty counts read "6 assets").
+
+**Dashboard "Where your assets are" / "Needs your action"** (option C)
+- Locations are rows instead of cards: code badge (location colour on its edge), name and address, status bar, then Assets / In use / Value columns under a small header. The rows share the card's height equally (`.loc-rows`, `.loc-row`). On phones each row wraps to name + numbers, with the bar below.
+- The per-row status legend was replaced by one shared key under the rows. Segment counts show on hover.
+- "Needs your action" takes the locations card's height and scrolls inside it (`.act-scroll` with `contain: size`, min 240px). `ACTIONS_SHOWN` and "Show N more" were removed.
+
+**Assets page KPI tiles**
+- The per-tile legends were removed. One `StatusKey` line under the tiles ("In this view: Available 9 · Assigned 17 …") explains the black card's status bar.
+- The three single-share tiles use the tile's ink colour plus a caption "9 of 34 in scope". Before, the amber warranty bar could be mistaken for "Under maintenance".
+- New `StatusKey` export in `src/components/StatTile.tsx`, also used on the Dashboard. `STATUS_ORDER` moved to `src/lib/labels.ts` (shared by the client charts and server pages).
+
+**Checked**
+- `tsc` and `eslint` are clean, and the pages compiled and loaded in the dev server. Not run: `npm run build`, e2e. Not checked visually by Claude.
+- The laptop dev server keeps getting killed for low memory, and `tsc` once ran out of memory. Heavier work is better done on the PC.
 
 ### 27 Oct 2026 — PC
 Pulled the laptop's 26 Oct work (`7326304`, `797b14a`, `59cedc4`) and ran `npm install` (adds `exceljs`).

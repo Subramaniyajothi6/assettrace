@@ -125,6 +125,11 @@
   select.inp { appearance: auto; }
   .skel { background: var(--at-chip); border-radius: var(--at-r2); animation: skel 1.4s ease-in-out infinite; }
   @keyframes skel { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+  /* Chart "Show as table": only months with a value, then a total row */
+  .chart-table { font-size: 13px; margin: 6px 0 4px; }
+  .chart-table td { padding: 9px 4px; }
+  .chart-table td.num { text-align: right; font-weight: 600; }
+  .chart-table tfoot td { border-top: 2px solid var(--at-ink); font-weight: 700; }
   /* StatTile: icon + label left, big number right, share bar + legend below */
   .stat { gap: 12px; }
   .stat-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
@@ -133,9 +138,12 @@
   .stat-ico { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; background: color-mix(in srgb, currentColor 12%, transparent); }
   .stat-bar { height: 8px; border-radius: 999px; display: flex; gap: 2px; overflow: hidden; background: color-mix(in srgb, currentColor 12%, transparent); }
   .stat-bar i { display: block; height: 100%; min-width: 4px; }
-  .stat-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; font-weight: 500; opacity: .85; }
-  .stat-legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .stat-legend i { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+  .stat-cap { font-size: 12px; font-weight: 600; opacity: .8; }
+  /* StatusKey: one shared colour key for a group of status-split bars */
+  .status-key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 12px; color: var(--at-soft); }
+  .status-key b { color: var(--at-ink); font-weight: 600; }
+  .status-key span { display: inline-flex; align-items: center; gap: 6px; }
+  .status-key i { width: 9px; height: 9px; border-radius: 3px; flex: none; }
   .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   /* field-sizing: fit the selected option, not the longest one (no blank gap after "Category: all"). */
   .toolbar select.inp { width: auto; min-width: 0; field-sizing: content; height: 44px; border-radius: var(--at-pill); }
@@ -188,7 +196,23 @@
   /* Dashboard charts: breakdown card full width, then two equal columns (one below 900px). */
   .dash-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
   @media (max-width: 900px) { .dash-charts { grid-template-columns: minmax(0, 1fr); } }
-  .more-actions > summary { list-style: none; margin: 8px 8px 4px; width: fit-content; cursor: pointer; }
-  .more-actions > summary::-webkit-details-marker { display: none; }
-  .more-actions[open] > summary { display: none; }
+  /* "Where your assets are": one row per location. Rows split the card's height equally (even spacing). */
+  .loc-rows { flex: 1; display: flex; flex-direction: column; }
+  .loc-row { flex: 1; display: grid; grid-template-columns: minmax(170px, 1.1fr) minmax(0, 2fr) repeat(3, 76px); gap: 18px; align-items: center; padding: 12px 0; border-top: 1px solid var(--at-line); }
+  .loc-row.loc-head { flex: none; border-top: 0; padding: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--at-muted); }
+  .loc-row.loc-head span:nth-child(n + 3) { text-align: right; }
+  .loc-name { display: flex; gap: 10px; align-items: center; min-width: 0; }
+  .loc-split { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+  .loc-stat { display: flex; flex-direction: column; align-items: flex-end; font-size: 16px; }
+  .loc-stat small { display: none; }
+  @media (max-width: 720px) {
+    .loc-row { grid-template-columns: minmax(0, 1fr) repeat(3, auto); gap: 10px 14px; }
+    .loc-row.loc-head { display: none; }
+    .loc-split { grid-column: 1 / -1; order: 5; }
+    .loc-stat small { display: block; font-size: 11px; }
+  }
+  /* "Needs your action": takes the locations card's height and scrolls inside it.
+     contain: size stops the list from making the row taller; min-height keeps it usable when stacked. */
+  .act-scroll { flex: 1 1 0; min-height: 240px; contain: size; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; scrollbar-width: thin; border-radius: 12px; }
+  .act-scroll:focus-visible { outline: 2px solid var(--at-accent); outline-offset: 2px; }
 }

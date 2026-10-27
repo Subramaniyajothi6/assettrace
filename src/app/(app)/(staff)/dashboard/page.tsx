@@ -7,10 +7,11 @@ import { getActionItems, getStaffDashboard } from "@/server/queries/dashboard";
 import { checkWarranties } from "@/server/services/notifications";
 import { PageHeader } from "@/components/PageHeader";
 import { KpiCard } from "@/components/KpiCard";
+import { StatusKey } from "@/components/StatTile";
 import { BreakdownCard, ChartCard, ColumnChart, TrendChart } from "@/components/charts/Charts";
 import { daysUntil } from "@/components/WarrantyCell";
 import { firstName, greeting, longDay, rupeeShort } from "@/lib/format";
-import { HISTORY_EVENT_LABELS, STATUS_COLORS, STATUS_LABELS } from "@/lib/labels";
+import { HISTORY_EVENT_LABELS, STATUS_COLORS, STATUS_LABELS, STATUS_ORDER } from "@/lib/labels";
 
 export const metadata = { title: "Dashboard" };
 
@@ -23,8 +24,6 @@ const EV_COLOR: Partial<Record<HistoryEvent, string>> = {
   TRANSFERRED: "#7C5CC4",
 };
 const hourFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "numeric", hourCycle: "h23" });
-/** "Needs your action" shows this many items; the rest open behind "Show N more" so the card stays level with the locations card. */
-const ACTIONS_SHOWN = 5;
 
 function ActionItem({ a, delay }: { a: Awaited<ReturnType<typeof getActionItems>>[number]; delay: number }) {
   return (
@@ -163,7 +162,7 @@ export default async function DashboardPage() {
             <span className="pill s-ok">{d.activeCount} active assets</span>
           </div>
           <small className="muted">Purchases per month, last 12 months</small>
-          <ColumnChart data={d.purchasesByMonth} money height={140} />
+          <ColumnChart data={d.purchasesByMonth} money height={140} zeroText="no purchases" />
         </section>
       </div>
 
@@ -219,62 +218,64 @@ export default async function DashboardPage() {
               {d.locations.reduce((n, l) => n + l.total, 0)} active assets across {d.locations.length} location{d.locations.length === 1 ? "" : "s"}
             </small>
           </div>
-          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16 }}>
+          {/* One row per location; rows share the card's height equally so the spacing stays even. */}
+          <div className="loc-rows">
+            <div className="loc-row loc-head" aria-hidden="true">
+              <span>Location</span>
+              <span>Status split</span>
+              <span>Assets</span>
+              <span>In use</span>
+              <span>Value</span>
+            </div>
             {d.locations.map((l, li) => (
-              <div key={l.id} className="card pad-s lift" style={{ borderTop: `4px solid ${["#3A6BB8", "#D2643E", "#2E7D4F"][li % 3]}`, display: "flex", flexDirection: "column", gap: 14 }}>
-                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                  <span className="ico" style={{ fontSize: 12, fontWeight: 700 }}>
+              <div key={l.id} className="loc-row">
+                <div className="loc-name">
+                  <span className="ico" style={{ fontSize: 12, fontWeight: 700, boxShadow: `inset 3px 0 0 ${["#3A6BB8", "#D2643E", "#2E7D4F"][li % 3]}` }}>
                     {l.code}
                   </span>
-                  <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.25 }}>
-                    <b style={{ fontSize: 16 }}>{l.name}</b>
-                    <small className="muted">{l.address}</small>
+                  <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, minWidth: 0 }}>
+                    <b style={{ fontSize: 15 }}>{l.name}</b>
+                    <small className="muted" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {l.address}
+                    </small>
                   </span>
                 </div>
-                <div
-                  className="loc-bar"
-                  role="img"
-                  aria-label={`${l.name}: ${l.statuses.map((s) => `${s.count} ${STATUS_LABELS[s.status].toLowerCase()}`).join(", ")}`}
-                  style={{ animationDelay: `${550 + li * 100}ms` }}
-                >
-                  {l.statuses.map((s) => (
-                    <Link
-                      key={s.status}
-                      href={`/assets?location=${l.id}&status=${s.status}`}
-                      title={`${s.count} ${STATUS_LABELS[s.status].toLowerCase()} · ${Math.round((s.count / l.total) * 100)}%`}
-                      style={{ flex: `${s.count} 1 0`, background: STATUS_COLORS[s.status] }}
-                    />
-                  ))}
+                <div className="loc-split">
+                  <div
+                    className="loc-bar"
+                    role="img"
+                    aria-label={`${l.name}: ${l.statuses.map((s) => `${s.count} ${STATUS_LABELS[s.status].toLowerCase()}`).join(", ")}`}
+                    style={{ animationDelay: `${550 + li * 100}ms` }}
+                  >
+                    {l.statuses.map((s) => (
+                      <Link
+                        key={s.status}
+                        href={`/assets?location=${l.id}&status=${s.status}`}
+                        title={`${s.count} ${STATUS_LABELS[s.status].toLowerCase()} · ${Math.round((s.count / l.total) * 100)}%`}
+                        style={{ flex: `${s.count} 1 0`, background: STATUS_COLORS[s.status] }}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: "6px 12px", fontSize: 13 }}>
-                  {l.statuses.map((s) => (
-                    <Link key={s.status} href={`/assets?location=${l.id}&status=${s.status}`} style={{ display: "flex", alignItems: "center", gap: 6, color: "inherit", textDecoration: "none" }}>
-                      <i style={{ width: 9, height: 9, borderRadius: 3, background: STATUS_COLORS[s.status], flex: "none" }} aria-hidden="true" />
-                      {s.status === "UNDER_MAINTENANCE" ? "Maintenance" : STATUS_LABELS[s.status]}
-                      <b style={{ marginLeft: "auto" }}>{s.count}</b>
-                    </Link>
-                  ))}
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 8, fontSize: 13, marginTop: "auto", paddingTop: 12, borderTop: "1px solid var(--at-line)" }}>
-                  <span>
-                    <span className="muted">Assets</span>
-                    <br />
-                    <b style={{ fontSize: 16 }}>{l.total}</b>
-                  </span>
-                  <span>
-                    <span className="muted">In use</span>
-                    <br />
-                    <b style={{ fontSize: 16 }}>{l.inUsePct}%</b>
-                  </span>
-                  <span>
-                    <span className="muted">Value</span>
-                    <br />
-                    <b style={{ fontSize: 16 }}>{rupeeShort(l.value)}</b>
-                  </span>
-                </div>
+                <span className="loc-stat">
+                  <small className="muted">Assets</small>
+                  <b>{l.total}</b>
+                </span>
+                <span className="loc-stat">
+                  <small className="muted">In use</small>
+                  <b>{l.inUsePct}%</b>
+                </span>
+                <span className="loc-stat">
+                  <small className="muted">Value</small>
+                  <b>{rupeeShort(l.value)}</b>
+                </span>
               </div>
             ))}
           </div>
+          {/* One shared colour key for every row, like the breakdown card; hover a segment for its count. */}
+          <StatusKey
+            items={STATUS_ORDER.filter((s) => d.locations.some((l) => l.statuses.some((x) => x.status === s))).map((s) => ({ label: STATUS_LABELS[s], color: STATUS_COLORS[s] }))}
+          />
         </section>
 
         <section className="card side rise" style={{ animationDelay: "480ms", padding: "20px 14px", display: "flex", flexDirection: "column", gap: 2 }}>
@@ -283,19 +284,11 @@ export default async function DashboardPage() {
             <span className="pill s-bad">{actions.length} open</span>
           </div>
           {actions.length ? (
-            <>
-              {actions.slice(0, ACTIONS_SHOWN).map((a, i) => (
-                <ActionItem key={`${a.href}-${i}`} a={a} delay={560 + i * 60} />
+            <div className="act-scroll" tabIndex={0} aria-label="Open actions">
+              {actions.map((a, i) => (
+                <ActionItem key={`${a.href}-${i}`} a={a} delay={560 + Math.min(i, 6) * 60} />
               ))}
-              {actions.length > ACTIONS_SHOWN ? (
-                <details className="more-actions">
-                  <summary className="btn sm">Show {actions.length - ACTIONS_SHOWN} more</summary>
-                  {actions.slice(ACTIONS_SHOWN).map((a, i) => (
-                    <ActionItem key={`${a.href}-${i}`} a={a} delay={0} />
-                  ))}
-                </details>
-              ) : null}
-            </>
+            </div>
           ) : (
             <div className="empty">
               <b>All clear</b>
@@ -315,10 +308,10 @@ export default async function DashboardPage() {
           ]}
         />
         <ChartCard title="Maintenance cost by month" sub="Last 12 months, ₹">
-          <ColumnChart data={d.maintenanceByMonth} money />
+          <ColumnChart data={d.maintenanceByMonth} money zeroText="no cost" />
         </ChartCard>
         <ChartCard title="Warranty expiry" sub="Assets whose warranty ends, next 6 months">
-          <ColumnChart data={d.warrantyByMonth} />
+          <ColumnChart data={d.warrantyByMonth} unit={["asset", "assets"]} zeroText="no expiries" />
         </ChartCard>
         <ChartCard title="Monthly asset transactions" sub="Every recorded history event, last 12 months" style={{ gridColumn: "1 / -1" }}>
           <TrendChart data={d.transactionsByMonth} />

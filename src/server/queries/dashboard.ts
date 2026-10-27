@@ -13,6 +13,7 @@ const MONTHS = 12;
 const TZ = "Asia/Kolkata";
 
 const monthLabel = new Intl.DateTimeFormat("en-IN", { month: "short", timeZone: TZ });
+const monthYearLabel = new Intl.DateTimeFormat("en-IN", { month: "short", year: "numeric", timeZone: TZ });
 const monthKeyFmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", timeZone: TZ });
 const monthKey = (d: Date) => monthKeyFmt.format(d).slice(0, 7); // 2026-10
 
@@ -21,7 +22,7 @@ function lastMonths(n: number, forward = false) {
   const now = new Date();
   return Array.from({ length: n }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() + (forward ? i : i - (n - 1)), 15);
-    return { key: monthKey(d), label: monthLabel.format(d) };
+    return { key: monthKey(d), label: monthLabel.format(d), full: monthYearLabel.format(d) };
   });
 }
 
@@ -158,7 +159,7 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
     return buckets;
   };
   const months = lastMonths(MONTHS);
-  const series = <T extends { m: string }>(rows: T[], pick: (r: T) => number, ms = months) => ms.map((m) => ({ label: m.label, value: pick(rows.find((r) => r.m === m.key) ?? ({} as T)) || 0 }));
+  const series = <T extends { m: string }>(rows: T[], pick: (r: T) => number, ms = months) => ms.map((m) => ({ label: m.label, full: m.full, value: pick(rows.find((r) => r.m === m.key) ?? ({} as T)) || 0 }));
 
   // "Where your assets are": per-location status breakdown (stacked bar) + stats.
   const locCards = locations

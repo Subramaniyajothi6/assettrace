@@ -68,8 +68,6 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
   const scope = managedAssetScope(user);
   const now = new Date();
   const since = new Date(now.getTime() - WEEKS * WEEK);
-  const startOfToday = new Date(now);
-  startOfToday.setHours(0, 0, 0, 0);
   const soon = new Date(now.getTime() + warrantyDays * DAY);
   const yearAgo = new Date(now.getFullYear(), now.getMonth() - (MONTHS - 1), 1);
   const sixMonths = new Date(now.getFullYear(), now.getMonth() + 6, 1);
@@ -85,7 +83,6 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
     pendingRequests,
     openIssues,
     trendRows,
-    todayEvents,
     locationAssets,
     maintenanceByMonth,
     purchasesByMonth,
@@ -108,11 +105,6 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
     prisma.employeeRequest.count({ where: { AND: [requestScope(user), { status: { in: ["PENDING", "IN_PROGRESS"] } }] } }),
     prisma.assetIssue.count({ where: { status: { in: ["REPORTED", "UNDER_REVIEW", "MAINTENANCE"] }, asset: scope } }),
     prisma.assetHistory.findMany({ where: { createdAt: { gte: since }, toStatus: { not: null }, asset: scope }, select: { toStatus: true, createdAt: true } }),
-    prisma.assetHistory.findMany({
-      where: { createdAt: { gte: startOfToday }, asset: scope },
-      orderBy: { createdAt: "asc" },
-      select: { id: true, event: true, description: true, createdAt: true, asset: { select: { name: true } } },
-    }),
     prisma.asset.groupBy({
       by: ["locationId", "status"],
       where: { AND: [scope, { status: { not: "RETIRED" } }] },
@@ -207,7 +199,6 @@ export async function getStaffDashboard(user: CurrentUser, warrantyDays: number)
     activeValue: Number(value._sum.purchaseCost ?? 0),
     activeCount: value._count._all,
     trends: { total: trend(), available: trend("AVAILABLE"), assigned: trend("ASSIGNED"), maintenance: trend("UNDER_MAINTENANCE") },
-    today: todayEvents,
     locations: locCards,
     maintenanceByMonth: series(maintenanceByMonth, (r) => r.total),
     purchasesByMonth: series(purchasesByMonth, (r) => r.total),

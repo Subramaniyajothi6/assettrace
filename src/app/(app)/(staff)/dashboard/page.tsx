@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Plus, QrCode } from "lucide-react";
-import type { HistoryEvent } from "@prisma/client";
 import { requireUser } from "@/server/permissions";
 import { getSettings } from "@/server/settings";
 import { getActionItems, getStaffDashboard } from "@/server/queries/dashboard";
@@ -11,19 +10,10 @@ import { StatusKey } from "@/components/StatTile";
 import { BreakdownCard, ChartCard, ColumnChart, TrendChart } from "@/components/charts/Charts";
 import { daysUntil } from "@/components/WarrantyCell";
 import { firstName, greeting, longDay, rupeeShort } from "@/lib/format";
-import { HISTORY_EVENT_LABELS, STATUS_COLORS, STATUS_LABELS, STATUS_ORDER } from "@/lib/labels";
+import { STATUS_COLORS, STATUS_LABELS, STATUS_ORDER } from "@/lib/labels";
 
 export const metadata = { title: "Dashboard" };
 
-const EV_COLOR: Partial<Record<HistoryEvent, string>> = {
-  ASSIGNED: "#3A6BB8",
-  HANDOVER_CONFIRMED: "#2E7D4F",
-  ISSUE_REPORTED: "#D2643E",
-  RETURN_REQUESTED: "#B98516",
-  REGISTERED: "#3A6BB8",
-  TRANSFERRED: "#7C5CC4",
-};
-const hourFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "numeric", hourCycle: "h23" });
 
 function ActionItem({ a, delay }: { a: Awaited<ReturnType<typeof getActionItems>>[number]; delay: number }) {
   return (
@@ -41,11 +31,6 @@ function ActionItem({ a, delay }: { a: Awaited<ReturnType<typeof getActionItems>
 }
 
 const timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit" });
-/** 9 am → 6 pm mapped to 0–100% of the timeline. */
-const hx = (d: Date) => {
-  const [h, m] = hourFmt.format(d).split(":").map(Number);
-  return Math.max(1, Math.min(99, ((h + m / 60 - 9) / 9) * 100));
-};
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -116,35 +101,6 @@ export default async function DashboardPage() {
                 All activity
               </Link>
             </div>
-          </div>
-          <div className="timeline" role="img" aria-label={`Today's activity: ${d.today.length} events`}>
-            <div className="base" />
-            <div className="done" style={{ width: `${hx(now)}%` }} />
-            {d.today.map((h, i) => (
-              <span
-                key={h.id}
-                className="ev"
-                title={`${timeFmt.format(h.createdAt)} · ${HISTORY_EVENT_LABELS[h.event]} · ${h.asset.name}`}
-                style={{ left: `${hx(h.createdAt)}%`, background: EV_COLOR[h.event] ?? "#3A6BB8", animationDelay: `${500 + i * 90}ms` }}
-              />
-            ))}
-            <div className="now" style={{ left: `${hx(now)}%` }} />
-            <span className="nowl" style={{ left: `${hx(now)}%` }}>
-              {timeFmt.format(now)}
-            </span>
-            {(
-              [
-                [9, "9a"],
-                [11, "11a"],
-                [13, "1p"],
-                [15, "3p"],
-                [17, "5p"],
-              ] as const
-            ).map(([h, l]) => (
-              <span key={l} className="hr" style={{ left: `${((h - 9) / 9) * 100}%` }}>
-                {l}
-              </span>
-            ))}
           </div>
         </section>
 

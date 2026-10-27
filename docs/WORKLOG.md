@@ -31,6 +31,18 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 
 ## Open items
 
+- [ ] **Navigation vs the assignment brief (decision pending, ask the user).** The brief's "Main Application Navigation" table lists:
+  - **Admin:** Dashboard, Assets, Employees, **Departments, Locations, Categories**, Users, Reports, Settings. The app has instead Dashboard, Assets, Employees, **Requests, Activity**, Reports, Users, **Master data** (tabs Departments/Locations/Categories/Vendors), Settings.
+  - **Manager:** matches, plus an extra Requests item.
+  - **Employee:** Dashboard, My Assets, Report Issue, Requests, Asset History, Notifications, Profile. The app has Home, My assets, Report issue, My requests, History. Notifications is reached through the bell, Profile through the avatar.
+  - Every page already exists (`/admin/departments|locations|categories|vendors` are separate URLs). Only the nav in `src/components/shell/nav.ts` differs, because Phase 0 followed the prototype.
+  - Choices put to the user:
+    1. Admin nav exactly as the brief, with Requests/Activity reachable from the Dashboard (recommended).
+    2. Brief + Requests.
+    3. Brief + Requests + Activity.
+  - Also: rename the employee items to the brief's names and add Notifications/Profile?
+  - If Master data is split, keep Vendors as a tab on those pages and update `SECTION_ALIASES`.
+
 - [ ] **Run only one dev server at a time.** On 27 Oct the PC hit `EMAXCONNSESSION`. When the laptop checked, it had no server or node process running, yet all 15 slots were held (idle Supavisor clients). So they came from the PC side or processes that never closed. If it happens: `Get-Process node | Stop-Process -Force` on the machine that ran the server. A permanent fix would be the transaction pooler (port 6543 + `pgbouncer=true`) for `DATABASE_URL`.
 - [ ] **KPI tiles on other pages:** the Assets page and the Dashboard location rows now share one `StatusKey` colour key. Dashboard KPIs, Assignments, Maintenance, Users and employee Home still use the old `KpiCard`.
 - [ ] **Dashboard e2e not run** after the 27 Oct breakdown card change. `e2e/phase10-dashboards.spec.ts` was updated but not executed: the e2e suite reseeds the shared database.
@@ -44,6 +56,12 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 - [ ] **From HANDOFF/LOCAL_SECRETS:** Vercel deployment, README screenshots, Phase 13 enhancements (`docs/ENHANCEMENTS.md`).
 
 ## Log
+
+### 27 Oct 2026 — laptop (evening)
+- **Assets list:** the "With" column is now "Assigned to" (also on the QR scan result page).
+- **Dashboard greeting card:** removed the 9am–6pm "today" timeline, since the time already shows in the header pill. The `today` query in `getStaffDashboard` and its helpers (`hx`, `EV_COLOR`, `hourFmt`) were removed too. The `.timeline` CSS in `skins.css` is now unused (generated from the prototype, left as is).
+- Compared the nav with the brief (see Open items). Nothing changed yet.
+- `tsc` and `eslint` are clean. Not checked in a browser by Claude.
 
 ### 27 Oct 2026 — laptop (afternoon)
 Pulled the PC's `dd85718` (breakdown card). The user picked each change below from a mock-up shown as an artifact.

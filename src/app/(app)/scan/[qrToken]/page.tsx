@@ -50,7 +50,7 @@ export default async function ScanResultPage({ params }: { params: Promise<{ qrT
           <dd>
             <StatusBadge status={a.status} />
           </dd>
-          <dt>With</dt>
+          <dt>Assigned to</dt>
           <dd>{a.currentHolder?.name ?? "—"}</dd>
           <dt>Location</dt>
           <dd>{a.location?.name ?? "—"}</dd>

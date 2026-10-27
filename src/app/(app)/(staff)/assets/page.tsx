@@ -113,7 +113,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
             <th>Category</th>
             <th>Serial no.</th>
             <th>Status</th>
-            <th>With</th>
+            <th>Assigned to</th>
             <th>Location</th>
             <th>Condition</th>
             <th>Warranty</th>

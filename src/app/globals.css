@@ -5,6 +5,17 @@
 
 @custom-variant dark (&:where([data-mode=dark], [data-mode=dark] *));
 
+/* Status text colours that keep 4.5:1 contrast in both themes (checked against card, page and greeting
+   backgrounds). --at-t-* sit on cards/page; --at-hd-* sit on the black hero card, which turns light in dark mode. */
+:root {
+  --at-t-bad: #B4232F; --at-t-high: #B4471C; --at-t-warn: #8A5206; --at-t-ok: #2A7548;
+  --at-hd-ok: #8FD6A8; --at-hd-warn: #F2C38B; --at-hd-bad: #F3C9B6;
+}
+[data-mode="dark"] {
+  --at-t-bad: #F2878C; --at-t-high: #F09A72; --at-t-warn: #E8B35E; --at-t-ok: #7CC79A;
+  --at-hd-ok: #1F5C3A; --at-hd-warn: #7A4505; --at-hd-bad: #8E2A12;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -103,6 +114,8 @@
 /* ── App additions on top of the prototype skin CSS ── */
 @layer components {
   .rail form { display: contents; }
+/* Rail page links (pages moved out of the top nav): show which one is open. */
+.rail a[aria-current="page"] { background: rgba(255, 255, 255, .2); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .55); }
   /* Below md the pill nav moves into a Sheet behind a menu button (CLAUDE.md rule 8). */
   .menu-btn { display: none; }
   @media (max-width: 767px) {

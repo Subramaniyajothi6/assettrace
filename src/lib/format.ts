@@ -7,6 +7,16 @@ const timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric"
 const hourFmt = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "numeric", hourCycle: "h23" });
 const longDayFmt = new Intl.DateTimeFormat("en-IN", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" });
 
+const isoDayFmt = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+
+/**
+ * YYYY-MM-DD of a moment in India, for `<input type="date">` defaults and `max`.
+ * Not `toISOString()`: that is the UTC day, which is still yesterday until 05:30 IST.
+ */
+export function isoDayIST(d: Date = new Date()): string {
+  return isoDayFmt.format(d);
+}
+
 type DateLike = Date | string | null | undefined;
 const toDate = (d: DateLike) => (d == null ? null : d instanceof Date ? d : new Date(d));
 

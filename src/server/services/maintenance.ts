@@ -8,7 +8,8 @@ import { createNotification, userIdOfEmployee } from "../notify";
 import { assertCan, requireUser } from "../permissions";
 import { nextNumber } from "../sequence";
 import { STATUS_LABELS } from "@/lib/labels";
-import { completeMaintenanceSchema, maintenanceSchema } from "@/lib/validation/issues";
+import { formatDate, rupee } from "@/lib/format";
+import { completeMaintenanceSchema, maintenanceSchema, updateMaintenanceSchema } from "@/lib/validation/issues";
 import { lockAsset } from "./assignments";
 import { markIssueInMaintenanceTx, reopenIssueReviewTx, resolveIssueFromMaintenanceTx } from "./issues";
 
@@ -128,12 +129,36 @@ export async function startMaintenanceWork(id: string) {
   if (m.status !== "SCHEDULED") throw new AppError("Only scheduled maintenance can be started.");
   return prisma.$transaction(async (tx) => {
     const r = await tx.maintenanceRecord.update({ where: { id }, data: { status: "IN_PROGRESS" } });
-    await recordHistory(tx, { assetId: m.assetId, actorId: user.id, event: "UPDATED", description: `${m.maintenanceNo} in progress` });
+    await recordHistory(tx, { assetId: m.assetId, actorId: user.id, event: "MAINTENANCE_IN_PROGRESS", description: `${m.maintenanceNo} work started${m.serviceProvider ? ` · ${m.serviceProvider}` : ""}` });
     return r;
   });
 }
 
 /** Complete: back to ASSIGNED/AVAILABLE (or DAMAGED if not repairable), resolve the issue, tell the holder. */
+/** Edit an open record (estimate, provider, expected date, parts, notes, warranty). History lists what changed. */
+export async function updateMaintenance(id: string, input: unknown) {
+  const { user, m } = await loadRecord(id);
+  if (!(OPEN as readonly string[]).includes(m.status)) throw new AppError("Only open maintenance can be edited.");
+  const data = updateMaintenanceSchema.parse(input);
+  if (data.expectedCompletion && data.expectedCompletion < m.serviceDate) {
+    throw new AppError("Expected completion must be after the service date.", { expectedCompletion: "Must be on or after the service date" });
+  }
+  const changes = [
+    Number(m.cost) !== data.cost ? `cost ${rupee(m.cost)} → ${rupee(data.cost)}` : null,
+    (m.serviceProvider ?? null) !== data.serviceProvider ? `provider ${data.serviceProvider ?? "—"}` : null,
+    (m.expectedCompletion?.getTime() ?? null) !== (data.expectedCompletion?.getTime() ?? null) ? `expected ${formatDate(data.expectedCompletion)}` : null,
+    m.warrantyCovered !== data.warrantyCovered ? (data.warrantyCovered ? "covered by warranty" : "not under warranty") : null,
+    (m.partsReplaced ?? null) !== data.partsReplaced ? "parts" : null,
+    (m.technicianNotes ?? null) !== data.technicianNotes ? "notes" : null,
+  ].filter(Boolean);
+  if (!changes.length) return m;
+  return prisma.$transaction(async (tx) => {
+    const r = await tx.maintenanceRecord.update({ where: { id }, data });
+    await recordHistory(tx, { assetId: m.assetId, actorId: user.id, event: "UPDATED", description: `${m.maintenanceNo} updated · ${changes.join(" · ")}` });
+    return r;
+  });
+}
+
 export async function completeMaintenance(id: string, input: unknown) {
   const { user, m } = await loadRecord(id);
   if (!(OPEN as readonly string[]).includes(m.status)) throw new AppError("This maintenance is already closed.");

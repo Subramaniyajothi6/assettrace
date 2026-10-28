@@ -4,13 +4,14 @@ import { useState } from "react";
 import { ActionForm, Field, Select, SubmitButton } from "@/components/forms/ActionForm";
 import { receiveReturnAction } from "@/actions/returns";
 import { CONDITION_LABELS } from "@/lib/labels";
+import { isoDayIST } from "@/lib/format";
 
 export function ReceiveForm({ id, accessories, receiver, holderFirstName }: { id: string; accessories: string[]; receiver: string; holderFirstName: string }) {
   const [got, setGot] = useState(accessories);
   const [condition, setCondition] = useState("GOOD");
   const [photos, setPhotos] = useState<string[]>([]);
   const missing = accessories.filter((x) => !got.includes(x));
-  const today = new Date().toISOString().slice(0, 10);
+  const today = isoDayIST();
 
   return (
     <ActionForm
@@ -97,7 +98,7 @@ export function ReceiveForm({ id, accessories, receiver, holderFirstName }: { id
             {missing.length ? ` with ${missing.join(", ")} missing` : ""} is saved.
           </li>
           <li>
-            The asset is <b style={{ color: "#F2C38B" }}>blocked from assignment</b> until it is inspected.
+            The asset is <b style={{ color: "var(--at-hd-warn)" }}>blocked from assignment</b> until it is inspected.
           </li>
         </ol>
         <SubmitButton name="next" value="inspect" pendingText="Saving…">

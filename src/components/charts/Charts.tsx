@@ -92,20 +92,32 @@ export function ColumnChart({
   height = 200,
   zeroText = "nothing",
   unit,
+  label,
 }: {
   data: Point[];
   money?: boolean;
-  height?: number;
+  /** Pixel height, or "fill" to take the remaining height of a flex-column card (min 110px). */
+  height?: number | "fill";
   /** Table note for empty months: "10 months with {zeroText} not shown". */
   zeroText?: string;
   /** Singular/plural noun after counts, e.g. ["asset", "assets"]. */
   unit?: [string, string];
+  /**
+   * Mini chart: no "Show as table"; this label plus a summary of the values becomes the chart's accessible
+   * name instead. Use only where the same data is available elsewhere (e.g. Reports).
+   */
+  label?: string;
 }) {
   const fmt = money ? inr : (n: number) => `${n.toLocaleString("en-IN")}${unit ? ` ${n === 1 ? unit[0] : unit[1]}` : ""}`;
   if (data.every((d) => !d.value)) return <EmptyChart />;
+  const summary = label ? `${label}: ${data.filter((d) => d.value).map((d) => `${d.full ?? d.label} ${fmt(d.value)}`).join(", ")}` : undefined;
   return (
     <>
-      <div style={{ width: "100%", height }}>
+      <div
+        role={summary ? "img" : undefined}
+        aria-label={summary}
+        style={height === "fill" ? { width: "100%", flex: "1 1 0", minHeight: 110 } : { width: "100%", height }}
+      >
         <ResponsiveContainer>
           <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }} barCategoryGap={4}>
             <CartesianGrid vertical={false} stroke={GRID} />
@@ -116,7 +128,7 @@ export function ColumnChart({
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <TableView data={data} unit={fmt} zeroText={zeroText} />
+      {summary ? null : <TableView data={data} unit={fmt} zeroText={zeroText} />}
     </>
   );
 }

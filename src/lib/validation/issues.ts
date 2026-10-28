@@ -60,6 +60,16 @@ export const maintenanceSchema = z
     }
   });
 
+/** Edit an open record: estimate, provider, dates and warranty can change while the asset is in the workshop. */
+export const updateMaintenanceSchema = z.object({
+  serviceProvider: optText(120),
+  cost: money(),
+  expectedCompletion: optDate(),
+  partsReplaced: optText(300),
+  technicianNotes: optText(1000),
+  warrantyCovered: z.preprocess((v) => v === "on" || v === "true", z.boolean()),
+});
+
 export const completeMaintenanceSchema = z.object({
   actualCompletion: z.preprocess(blankToUndef, z.coerce.date({ error: "Completion date is required" })),
   cost: money(),

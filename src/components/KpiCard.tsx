@@ -20,7 +20,7 @@ type Props = {
 };
 
 const VARIANT = { card: "card", dark: "hero-dark", blue: "hero-blue" } as const;
-const TONE = { ok: "#2E7D4F", bad: "var(--at-alert)", muted: undefined } as const;
+const TONE = { ok: "var(--at-t-ok)", bad: "var(--at-alert)", muted: undefined } as const;
 
 /** KPI tile with count-up number and sparkline (ARCHITECTURE.md §8). */
 export function KpiCard({ label, value, sub, tone = "muted", trend, variant = "card", href, delay = 0 }: Props) {

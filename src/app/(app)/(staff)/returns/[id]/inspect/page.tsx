@@ -60,7 +60,7 @@ export default async function InspectPage({ params }: { params: Promise<{ id: st
             <dt>Condition</dt>
             <dd>{r.condition ? CONDITION_LABELS[r.condition] : "—"}</dd>
             <dt>Missing</dt>
-            <dd style={{ color: "#8E2A12" }}>{r.missingAccessories.join(", ") || "Nothing"}</dd>
+            <dd style={{ color: "var(--at-t-bad)" }}>{r.missingAccessories.join(", ") || "Nothing"}</dd>
             <dt>Damage</dt>
             <dd>{r.damage || "None noted"}</dd>
           </dl>

@@ -6,8 +6,10 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import type { Role } from "@prisma/client";
 import {
-  Bell,
+  Activity,
+  BarChart3,
   Briefcase,
+  ClipboardCheck,
   Clock,
   Home,
   Laptop,
@@ -16,16 +18,17 @@ import {
   Moon,
   Plus,
   QrCode,
-  Search,
+  Settings,
   Sun,
   TriangleAlert,
+  Users,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Initials } from "@/components/Initials";
 import { logoutAction } from "@/actions/auth";
 import { ROLE_LABELS } from "@/lib/labels";
 import { cn } from "@/lib/utils";
-import { NAV, RAIL, homeFor, isActive, type BadgeKey, type RailIcon } from "./nav";
+import { NAV, RAIL, homeFor, isActive, type BadgeKey, type NavItem, type RailIcon, type RailItem } from "./nav";
 import { NotificationBell } from "./NotificationBell";
 
 type Props = {
@@ -39,11 +42,14 @@ type Props = {
 };
 
 const RAIL_ICONS: Record<RailIcon, React.ComponentType<{ size?: number }>> = {
-  search: Search,
   plus: Plus,
   qr: QrCode,
   warn: TriangleAlert,
-  bell: Bell,
+  users: Users,
+  inspect: ClipboardCheck,
+  chart: BarChart3,
+  activity: Activity,
+  settings: Settings,
 };
 
 export function AppShell({ role, name, scopeLabel, badges, unread, allowDark, children }: Props) {
@@ -54,11 +60,14 @@ export function AppShell({ role, name, scopeLabel, badges, unread, allowDark, ch
 
   useEffect(() => setMenuOpen(false), [pathname]);
 
-  const navLinks = (className?: string) =>
-    nav.map((n) => {
+  const topNav = nav.filter((n) => !n.rail);
+  const railPages = nav.filter((n): n is NavItem & { rail: RailIcon } => !!n.rail);
+
+  const navLinks = (items: NavItem[]) =>
+    items.map((n) => {
       const count = n.badge ? badges[n.badge] : 0;
       return (
-        <Link key={n.href} href={n.href} className={className} aria-current={isActive(pathname, n.href) ? "page" : undefined}>
+        <Link key={n.href} href={n.href} aria-current={isActive(pathname, n.href) ? "page" : undefined}>
           {n.label}
           {count ? <span className="badge">{count}</span> : null}
         </Link>
@@ -67,7 +76,11 @@ export function AppShell({ role, name, scopeLabel, badges, unread, allowDark, ch
 
   return (
     <div className={cn(isEmployee && "emp")}>
-      <Rail items={RAIL[isEmployee ? "EMPLOYEE" : "STAFF"]} allowDark={allowDark} />
+      <Rail
+        pages={railPages.map((n) => ({ label: n.label, href: n.href, icon: n.rail, active: isActive(pathname, n.href) }))}
+        items={RAIL[isEmployee ? "EMPLOYEE" : "STAFF"]}
+        allowDark={allowDark}
+      />
 
       <div className="page">
         <header className="top rise">
@@ -78,7 +91,7 @@ export function AppShell({ role, name, scopeLabel, badges, unread, allowDark, ch
             <SheetContent side="left" className="mobile-menu">
               <SheetTitle className="sr">Main menu</SheetTitle>
               <nav aria-label="Main" className="mobile-menu-nav">
-                {navLinks()}
+                {navLinks(nav)}
               </nav>
             </SheetContent>
           </Sheet>
@@ -94,7 +107,7 @@ export function AppShell({ role, name, scopeLabel, badges, unread, allowDark, ch
           </Link>
 
           <nav className="nav" aria-label="Main">
-            {navLinks()}
+            {navLinks(topNav)}
           </nav>
 
           <div className="tright">
@@ -119,14 +132,23 @@ export function AppShell({ role, name, scopeLabel, badges, unread, allowDark, ch
   );
 }
 
-function Rail({ items, allowDark }: { items: (typeof RAIL)["STAFF"]; allowDark: boolean }) {
+function Rail({ pages, items, allowDark }: { pages: (RailItem & { active: boolean })[]; items: RailItem[]; allowDark: boolean }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const dark = mounted && resolvedTheme === "dark";
 
   return (
-    <nav className="rail" aria-label="Quick actions">
+    <nav className="rail" aria-label="More pages and quick actions">
+      {pages.map((r) => {
+        const Icon = RAIL_ICONS[r.icon];
+        return (
+          <Link key={r.href} href={r.href} data-tip={r.label} aria-label={r.label} aria-current={r.active ? "page" : undefined}>
+            <Icon size={19} />
+          </Link>
+        );
+      })}
+      {pages.length ? <hr /> : null}
       {items.map((r) => {
         const Icon = RAIL_ICONS[r.icon];
         return (

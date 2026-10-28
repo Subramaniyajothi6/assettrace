@@ -27,6 +27,7 @@ const EV: Partial<Record<HistoryEvent, [string, string, LucideIcon]>> = {
   ISSUE_REPORTED: ["#F8DDD2", "#8E2A12", TriangleAlert],
   ISSUE_UPDATED: ["#FBEBD2", "#7A4505", TriangleAlert],
   MAINTENANCE_STARTED: ["#FBEBD2", "#7A4505", Wrench],
+  MAINTENANCE_IN_PROGRESS: ["#E3EBF7", "#1F4E95", Wrench],
   MAINTENANCE_COMPLETED: ["#E3EBF7", "#1F4E95", Wrench],
   RETURN_REQUESTED: ["#FBEBD2", "#7A4505", Undo2],
   RETURNED: ["#ECE9E4", "#3B3833", Undo2],

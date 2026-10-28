@@ -15,9 +15,9 @@ export function WarrantyCell({ end, retired, alertDays }: { end: Date | null; re
   const d = daysUntil(end);
   const hint =
     retired ? null : d < 0 ? (
-      <small style={{ color: "#8E2A12", fontWeight: 600 }}>Expired</small>
+      <small style={{ color: "var(--at-t-bad)", fontWeight: 600 }}>Expired</small>
     ) : d <= alertDays ? (
-      <small style={{ color: "#7A4505", fontWeight: 600 }}>{d === 0 ? "Ends today" : `Ends in ${d} day${d === 1 ? "" : "s"}`}</small>
+      <small style={{ color: "var(--at-t-warn)", fontWeight: 600 }}>{d === 0 ? "Ends today" : `Ends in ${d} day${d === 1 ? "" : "s"}`}</small>
     ) : null;
   return (
     <span style={{ display: "flex", flexDirection: "column" }}>

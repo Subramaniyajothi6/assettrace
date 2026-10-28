@@ -77,9 +77,9 @@ export default async function AssetPage({ params, searchParams }: { params: Prom
         <span key="w">
           {formatDate(a.warrantyStart)} – {formatDate(a.warrantyEnd)}
           {w !== null && w >= 0 && w <= warrantyAlertDays && a.status !== "RETIRED" ? (
-            <small style={{ color: "#7A4505", display: "block" }}>Ends in {w} days</small>
+            <small style={{ color: "var(--at-t-warn)", display: "block" }}>Ends in {w} days</small>
           ) : w !== null && w < 0 ? (
-            <small style={{ color: "#8E2A12", display: "block" }}>Expired</small>
+            <small style={{ color: "var(--at-t-bad)", display: "block" }}>Expired</small>
           ) : null}
         </span>
       ) : (

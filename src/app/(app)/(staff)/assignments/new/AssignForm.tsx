@@ -8,6 +8,7 @@ import { ActionForm, Field, Select, SubmitButton } from "@/components/forms/Acti
 import { Initials } from "@/components/Initials";
 import { assignAction } from "@/actions/assignments";
 import { CONDITION_LABELS, STATUS_LABELS } from "@/lib/labels";
+import { isoDayIST } from "@/lib/format";
 
 type PoolAsset = { id: string; tag: string; name: string; status: AssetStatus; condition: AssetCondition; locationId: string | null; code: string };
 type Emp = { id: string; name: string; code: string; dept: string; locationId: string | null; holds: number };
@@ -22,7 +23,7 @@ const DEFAULT_ACCESSORIES: Record<string, string[]> = {
 };
 const EXTRA = ["Mouse", "Docking station", "Headset"];
 
-const isoDay = (d: Date) => d.toISOString().slice(0, 10);
+const isoDay = isoDayIST;
 
 export function AssignForm({
   pool,

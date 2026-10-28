@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, QrCode } from "lucide-react";
+import { Plus } from "lucide-react";
 import { requireUser } from "@/server/permissions";
 import { getSettings } from "@/server/settings";
 import { getActionItems, getStaffDashboard } from "@/server/queries/dashboard";
@@ -63,48 +63,46 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className="row">
-        <section className="card pad main-col rise" style={{ background: "var(--at-greet)", animationDelay: "120ms", display: "flex", flexDirection: "column", gap: 18 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16 }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 560 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".08em", color: "var(--at-alert)" }}>{longDay(now)}</span>
-              <h2 style={{ margin: 0, fontSize: 32, fontWeight: 600, letterSpacing: "-.02em" }}>
-                {greeting(now)}, {firstName(user.name)}.
-              </h2>
-              <p style={{ margin: 0, fontSize: 16, color: "var(--at-soft)" }}>
-                <b style={{ color: "var(--at-ink)" }}>
-                  {d.pendingHandovers} handover{d.pendingHandovers === 1 ? "" : "s"}
-                </b>{" "}
-                waiting for a signature,{" "}
-                <b style={{ color: "var(--at-ink)" }}>
-                  {toProcess} return{toProcess === 1 ? "" : "s"}
-                </b>{" "}
-                to process and <b style={{ color: "var(--at-ink)" }}>{c.maintenance} assets</b> in repair.
-                {urgent ? (
-                  <>
-                    {" "}
-                    <Link href="/issues" style={{ color: "#D2414E", fontWeight: 700, textDecoration: "none" }}>
-                      {urgent} urgent issue{urgent === 1 ? " needs" : "s need"} a look.
-                    </Link>
-                  </>
-                ) : null}
-              </p>
-            </div>
-            <div className="gap8" style={{ alignItems: "flex-start" }}>
-              <Link className="btn pri" href="/scan">
-                <QrCode size={17} /> Scan QR
-              </Link>
-              <Link className="btn" href="/assets/new">
-                <Plus size={17} /> Register asset
-              </Link>
-              <Link className="btn" href="/activity">
-                All activity
-              </Link>
-            </div>
+      {/* Both cards share one height: the purchases chart fills what the value card has left, and the greeting card spreads its content. */}
+      <div className="row" style={{ alignItems: "stretch" }}>
+        {/* Greeting at the top, actions at the bottom: the card spreads its content over the row's height. */}
+        <section className="card pad main-col rise" style={{ background: "var(--at-greet)", animationDelay: "120ms", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 24 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 640 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".08em", color: "var(--at-alert)" }}>{longDay(now)}</span>
+            <h2 style={{ margin: 0, fontSize: 32, fontWeight: 600, letterSpacing: "-.02em" }}>
+              {greeting(now)}, {firstName(user.name)}.
+            </h2>
+            <p style={{ margin: 0, fontSize: 16, color: "var(--at-soft)" }}>
+              <b style={{ color: "var(--at-ink)" }}>
+                {d.pendingHandovers} handover{d.pendingHandovers === 1 ? "" : "s"}
+              </b>{" "}
+              waiting for a signature,{" "}
+              <b style={{ color: "var(--at-ink)" }}>
+                {toProcess} return{toProcess === 1 ? "" : "s"}
+              </b>{" "}
+              to process and <b style={{ color: "var(--at-ink)" }}>{c.maintenance} assets</b> in repair.
+              {urgent ? (
+                <>
+                  {" "}
+                  <Link href="/issues" style={{ color: "var(--at-t-bad)", fontWeight: 700, textDecoration: "none" }}>
+                    {urgent} urgent issue{urgent === 1 ? " needs" : "s need"} a look.
+                  </Link>
+                </>
+              ) : null}
+            </p>
+          </div>
+          {/* Scan QR lives in the left rail. */}
+          <div className="gap8" style={{ alignItems: "flex-start" }}>
+            <Link className="btn pri" href="/assets/new">
+              <Plus size={17} /> Register asset
+            </Link>
+            <Link className="btn" href="/activity">
+              All activity
+            </Link>
           </div>
         </section>
 
-        <section className="card pad side lift rise" style={{ animationDelay: "180ms", display: "flex", flexDirection: "column", gap: 14 }}>
+        <section className="card pad side lift rise" style={{ animationDelay: "180ms", display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <h2 className="h2">Asset value</h2>
             <Link className="btn sm" href="/reports">
@@ -118,7 +116,7 @@ export default async function DashboardPage() {
             <span className="pill s-ok">{d.activeCount} active assets</span>
           </div>
           <small className="muted">Purchases per month, last 12 months</small>
-          <ColumnChart data={d.purchasesByMonth} money height={140} zeroText="no purchases" />
+          <ColumnChart data={d.purchasesByMonth} money height="fill" label="Purchases per month" />
         </section>
       </div>
 

@@ -5,13 +5,14 @@ import { useRef, useState } from "react";
 import { ActionForm, Field, Select, SubmitButton } from "@/components/forms/ActionForm";
 import { retireAssetAction } from "@/actions/returns";
 import { CONDITION_LABELS, DISPOSAL_LABELS } from "@/lib/labels";
+import { isoDayIST } from "@/lib/format";
 
 /** Retirement form with an inline "are you sure" step (prototype `retire`). */
 export function RetireForm({ assetId, tag, authorizer, condition }: { assetId: string; tag: string; authorizer: string; condition: string }) {
   const [asking, setAsking] = useState(false);
   const [disposal, setDisposal] = useState("RECYCLED");
   const formRef = useRef<HTMLDivElement>(null);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = isoDayIST();
 
   return (
     <ActionForm

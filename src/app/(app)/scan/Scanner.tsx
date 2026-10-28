@@ -69,7 +69,7 @@ export function Scanner() {
         {on ? <CameraOff size={18} /> : <Camera size={18} />} {on ? "Stop camera" : "Start camera"}
       </button>
       {error ? (
-        <span role="alert" style={{ color: "#F3C9B6", fontWeight: 600 }}>
+        <span role="alert" style={{ color: "var(--at-hd-bad)", fontWeight: 600 }}>
           {error}
         </span>
       ) : (

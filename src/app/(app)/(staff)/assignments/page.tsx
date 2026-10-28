@@ -32,6 +32,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
 
   const tabWhere: Record<(typeof TABS)[number], Prisma.AssignmentWhereInput> = {
     active: { isActive: true },
+    // "Not signed": waiting for a signature or disputed, both still need follow-up.
     pending: { isActive: true, handoverStatus: { not: "CONFIRMED" } },
     overdue: { isActive: true, expectedReturnDate: { lt: now } },
     history: { isActive: false },
@@ -71,7 +72,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
     }),
   ]);
   const [active, pending, overdue, waiting, disputed] = counts;
-  const tabLabel = { active: `Active · ${active}`, pending: `Pending handover · ${pending}`, overdue: `Overdue · ${overdue}`, history: "History" };
+  const tabLabel = { active: `Active · ${active}`, pending: `Not signed · ${pending}`, overdue: `Overdue · ${overdue}`, history: "History" };
 
   return (
     <>
@@ -107,7 +108,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
         <Link href="/assignments?tab=overdue" className="card kpi lift rise" style={{ animationDelay: "120ms" }}>
           <span className="l">Overdue returns</span>
           <span className="v">{overdue}</span>
-          <span className="s" style={{ color: "#B4232F" }}>
+          <span className="s" style={{ color: "var(--at-t-bad)" }}>
             past the expected return date
           </span>
         </Link>
@@ -156,7 +157,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
                 </span>
               </td>
               <td style={{ color: "var(--at-soft)" }}>{formatDate(g.assignedAt)}</td>
-              <td style={od ? { color: "#B4232F", fontWeight: 700 } : { color: "var(--at-soft)" }}>
+              <td style={od ? { color: "var(--at-t-bad)", fontWeight: 700 } : { color: "var(--at-soft)" }}>
                 {g.isActive
                   ? g.expectedReturnDate
                     ? `${formatDate(g.expectedReturnDate)}${od ? ` · ${-daysUntil(g.expectedReturnDate)} days overdue` : ""}`

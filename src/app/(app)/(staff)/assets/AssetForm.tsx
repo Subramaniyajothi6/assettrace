@@ -6,6 +6,7 @@ import { Camera } from "lucide-react";
 import { ActionForm, Field, Select, SubmitButton } from "@/components/forms/ActionForm";
 import { createAssetAction, updateAssetAction } from "@/actions/assets";
 import { CONDITION_LABELS } from "@/lib/labels";
+import { isoDayIST } from "@/lib/format";
 
 type Opt = { id: string; name: string };
 type Options = { categories: (Opt & { code: string })[]; locations: Opt[]; departments: Opt[]; vendors: Opt[] };
@@ -35,7 +36,7 @@ const toOpts = (xs: Opt[]) => xs.map((x) => ({ value: x.id, label: x.name }));
 
 /** Register / edit asset (prototype `assetForm`). */
 export function AssetForm({ options, asset, prefix, nextNumbers }: { options: Options; asset?: AssetFormValues; prefix: string; nextNumbers: Record<string, number> }) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = isoDayIST();
   const [categoryId, setCategoryId] = useState(options.categories.find((c) => c.code === "LAP")?.id ?? options.categories[0]?.id ?? "");
   const [photoName, setPhotoName] = useState<string | null>(null);
   const nextTag = useMemo(() => {
@@ -172,7 +173,7 @@ export function AssetForm({ options, asset, prefix, nextNumbers }: { options: Op
             "Changes are recorded in the asset history."
           ) : (
             <>
-              A QR label is created when you save. Status on save: <b style={{ color: "#8FD6A8" }}>Available</b>.
+              A QR label is created when you save. Status on save: <b style={{ color: "var(--at-hd-ok)" }}>Available</b>.
             </>
           )}
         </span>

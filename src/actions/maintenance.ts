@@ -1,7 +1,7 @@
 "use server";
 
 import { run } from "@/server/action";
-import { cancelMaintenance, completeMaintenance, createMaintenance, startMaintenanceWork } from "@/server/services/maintenance";
+import { cancelMaintenance, completeMaintenance, createMaintenance, startMaintenanceWork, updateMaintenance } from "@/server/services/maintenance";
 import { formToObject } from "@/lib/validation/common";
 import { STATUS_LABELS } from "@/lib/labels";
 
@@ -17,6 +17,13 @@ export async function createMaintenanceAction(fd: FormData) {
 export async function startMaintenanceAction(id: string) {
   return run(async () => {
     const m = await startMaintenanceWork(id);
+    return { no: m.maintenanceNo };
+  }, PATHS);
+}
+
+export async function updateMaintenanceAction(id: string, fd: FormData) {
+  return run(async () => {
+    const m = await updateMaintenance(id, formToObject(fd));
     return { no: m.maintenanceNo };
   }, PATHS);
 }

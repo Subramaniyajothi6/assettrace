@@ -13,7 +13,8 @@ import { IssueCardActions } from "./IssueCardActions";
 
 export const metadata = { title: "Issues" };
 
-const SEV = { CRITICAL: "#B4232F", HIGH: "#D2643E", MEDIUM: "#D08A1E", LOW: "#9AA6B2" } as const;
+// Theme tokens (globals.css) so severity text keeps 4.5:1 contrast in light and dark.
+const SEV = { CRITICAL: "var(--at-t-bad)", HIGH: "var(--at-t-high)", MEDIUM: "var(--at-t-warn)", LOW: "var(--at-muted)" } as const;
 
 const TABS = ["open", "resolved", "closed", "all"] as const;
 type Tab = (typeof TABS)[number];
@@ -159,7 +160,8 @@ export default async function IssuesPage({ searchParams }: { searchParams: Promi
               </small>
               {i.resolution ? (
                 <small style={{ display: "block", color: "var(--at-soft)" }}>
-                  <b>Fix:</b> {i.resolution}
+                  {/* Resolutions from maintenance are stored as "Fixed: …"; drop that so it doesn't read "Fix: Fixed: …". */}
+                  <b>Fix:</b> {i.resolution.replace(/^Fixed:\s*/, "")}
                 </small>
               ) : null}
             </td>

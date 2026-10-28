@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isoDayIST } from "@/lib/format";
 
 /** Convert FormData to a plain object. Repeated keys (or keys ending in []) become arrays. */
 export function formToObject(fd: FormData): Record<string, unknown> {
@@ -76,9 +77,9 @@ export function enumOf<T extends string>(values: readonly T[], label: string) {
   return z.enum(values as [T, ...T[]], { error: `Choose ${label}` });
 }
 
-/** End of today, for "can't be in the future" checks. */
-export const endOfToday = () => {
-  const d = new Date();
-  d.setHours(23, 59, 59, 999);
-  return d;
-};
+/**
+ * End of today in India, for "can't be in the future" checks. Date inputs ("2026-10-28") parse as UTC
+ * midnight, so compare against the end of the IST calendar day expressed the same way; the server's own
+ * clock (UTC on Vercel) would still be on yesterday until 05:30 IST.
+ */
+export const endOfToday = () => new Date(`${isoDayIST()}T23:59:59.999Z`);

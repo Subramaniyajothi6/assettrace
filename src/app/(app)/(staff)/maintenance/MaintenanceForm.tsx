@@ -4,18 +4,20 @@ import { useState } from "react";
 import { ActionForm, Field, Select, SubmitButton } from "@/components/forms/ActionForm";
 import { createMaintenanceAction } from "@/actions/maintenance";
 import { MAINTENANCE_TYPE_LABELS } from "@/lib/labels";
+import { isoDayIST } from "@/lib/format";
 
 type PoolAsset = { id: string; label: string; warranty: string; warrantyActive: boolean; issues: { value: string; label: string }[] };
 
-export function MaintenanceForm({ pool, initialAssetId }: { pool: PoolAsset[]; initialAssetId?: string }) {
+/** `heading` replaces the plain title (the dialog passes its DialogTitle); `onDone` runs after a successful save. */
+export function MaintenanceForm({ pool, initialAssetId, heading, onDone }: { pool: PoolAsset[]; initialAssetId?: string; heading?: React.ReactNode; onDone?: () => void }) {
   const [assetId, setAssetId] = useState(pool.some((a) => a.id === initialAssetId) ? initialAssetId! : (pool[0]?.id ?? ""));
   const asset = pool.find((a) => a.id === assetId);
   const [warranty, setWarranty] = useState(asset?.warrantyActive ?? false);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = isoDayIST();
 
   if (!pool.length) {
     return (
-      <div className="card pad side empty">
+      <div className="empty">
         <b>Nothing to service</b>
         <span>No available, assigned or damaged assets in your departments.</span>
       </div>
@@ -27,10 +29,10 @@ export function MaintenanceForm({ pool, initialAssetId }: { pool: PoolAsset[]; i
       action={createMaintenanceAction}
       success={(d) => `${d.no} saved. The asset is under maintenance.`}
       resetOnSuccess
-      className="card pad side rise"
-      style={{ animationDelay: "160ms", display: "flex", flexDirection: "column", gap: 14 }}
+      onSuccess={onDone}
+      style={{ display: "flex", flexDirection: "column", gap: 14 }}
     >
-      <h2 className="h2">Record maintenance</h2>
+      {heading ?? <h2 className="h2">Record maintenance</h2>}
       <Field name="assetId" label="Asset *">
         <Select
           name="assetId"

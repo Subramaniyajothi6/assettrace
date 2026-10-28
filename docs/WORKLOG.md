@@ -31,6 +31,9 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 
 ## Open items
 
+- [ ] **Deploy to Vercel.** Not set up yet: no Vercel project, CLI not installed. Needs the user to log in (`npx vercel login`), then link the repo and add env vars. On Vercel `DATABASE_URL` must be the transaction pooler (port 6543, `?pgbouncer=true&connection_limit=1`), plus `DIRECT_URL`, `AUTH_SECRET`, `AUTH_TRUST_HOST=true`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET`, `NEXT_PUBLIC_APP_URL`, `CRON_SECRET`.
+- [ ] **After pulling on the PC:** run `npx prisma generate` (new enum value `MAINTENANCE_IN_PROGRESS`; the migration is already applied to the shared database).
+
 - [ ] **Navigation vs the assignment brief (decision pending, ask the user).** The brief's "Main Application Navigation" table lists:
   - **Admin:** Dashboard, Assets, Employees, **Departments, Locations, Categories**, Users, Reports, Settings. The app has instead Dashboard, Assets, Employees, **Requests, Activity**, Reports, Users, **Master data** (tabs Departments/Locations/Categories/Vendors), Settings.
   - **Manager:** matches, plus an extra Requests item.
@@ -43,13 +46,10 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
   - Also: rename the employee items to the brief's names and add Notifications/Profile?
   - If Master data is split, keep Vendors as a tab on those pages and update `SECTION_ALIASES`.
 
-- [ ] **Form dates use the UTC day, not IST.** `new Date().toISOString().slice(0, 10)` is used as the default and the `max` date in `AssetForm`, `RetireForm`, `AssignForm`, `MaintenanceForm`, `maintenance/RowActions` and `ReceiveForm`. Between 00:00 and 05:30 IST this shows yesterday, and `max` blocks today's date (seen on 28 Oct: "Purchased 27 Oct" / "Since 27 Oct"). Use an Asia/Kolkata day helper instead.
-- [ ] **Assignments "Pending handover · 3" tab** counts pending + disputed (`handoverStatus != CONFIRMED`), while the "Waiting for signature" card shows only pending (2). Rename the tab to "Not confirmed", or make the counts match.
-- [ ] **Finish the lifecycle walkthrough** from Step 7 (see the 28 Oct entry).
+- [ ] **Finish Step 12 of the walkthrough** (final checks): Reports + one Excel export, Arun's notifications / My assets / History, admin Dashboard counts and Activity. Steps 1–11 are done (AST-LAP-0017 registered → … → retired on 28 Oct).
 - [ ] **Run only one dev server at a time.** On 27 Oct the PC hit `EMAXCONNSESSION`. When the laptop checked, it had no server or node process running, yet all 15 slots were held (idle Supavisor clients). So they came from the PC side or processes that never closed. If it happens: `Get-Process node | Stop-Process -Force` on the machine that ran the server. A permanent fix would be the transaction pooler (port 6543 + `pgbouncer=true`) for `DATABASE_URL`.
 - [ ] **KPI tiles on other pages:** the Assets page and the Dashboard location rows now share one `StatusKey` colour key. Dashboard KPIs, Assignments, Maintenance, Users and employee Home still use the old `KpiCard`.
 - [ ] **Dashboard e2e not run** after the 27 Oct breakdown card change. `e2e/phase10-dashboards.spec.ts` was updated but not executed: the e2e suite reseeds the shared database.
-- [ ] **KPI cards (new StatTile style):** only the Assets page uses them so far. Dashboard, Assignments, Maintenance, Users and employee Home still have the old cards, and each needs its own choice of what the bar shows.
 - [ ] **Form dropdowns** (Register asset, Assign, etc.) are still native `<select>` and can open upwards in short windows. The toolbar filters are already fixed. Switch the forms to `FilterSelect`-style dropdowns?
 - [ ] **Locations / Categories:** rename the "Name" field and column to "Location name" / "Category name", to match "Department name" and "Vendor name"?
 - [ ] **Unused visual skins:** the other 7 skins are still in `src/lib/skins.ts` and `src/app/skins.css`, but there's no picker any more. Remove them to shrink the CSS?
@@ -59,6 +59,23 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 - [ ] **From HANDOFF/LOCAL_SECRETS:** Vercel deployment, README screenshots, Phase 13 enhancements (`docs/ENHANCEMENTS.md`).
 
 ## Log
+
+### 28 Oct 2026 — laptop (afternoon)
+Walkthrough Steps 7–11 done with AST-LAP-0017 (MNT-0017 completed ₹3,500 · RET-0015 received, charger missing · inspected Good · retired, recycled). Commit `e9a8bb6`.
+
+**Bugs fixed from the walkthrough**
+- Dates: new `isoDayIST()` in `src/lib/format.ts`. All form defaults/`max` use it, and `endOfToday()` (validation) is now the end of the IST day, so a UTC server no longer rejects "today" before 05:30 IST.
+- Issues: "Fix: Fixed: Battery" → "Fix: Battery" (display strips the stored "Fixed:" prefix).
+- History: new enum value `MAINTENANCE_IN_PROGRESS` (migration `20261028100000_maintenance_in_progress`, applied). "Start" logs "Maintenance in progress"; `MAINTENANCE_STARTED` is now labelled "Sent for maintenance". Old rows keep "Details updated" (history is append-only).
+- Assignments: the tab "Pending handover" is renamed "Not signed" (it counts pending + disputed).
+- Maintenance: "Record maintenance" is a header button + dialog (`RecordMaintenance.tsx`; opens itself for `?asset=`), so the table has the full width. New **Edit** action on open jobs (`updateMaintenance` service + `updateMaintenanceSchema`): cost, expected date, provider, parts, notes, warranty; history lists the changes. Complete pre-fills from it.
+
+**UI**
+- Contrast audit (WCAG, warm skin, light + dark): all tokens pass. 13 hard-coded colours failed in dark mode (red/brown text, light text on the black hero card, which turns light in dark mode). New theme tokens `--at-t-bad|high|warn|ok` and `--at-hd-ok|warn|bad` in `globals.css`. Issue severity colours use them.
+- Nav: `NavItem.rail` moves a page into the left bar. Manager: Employees, Inspections, Reports. Admin: Activity, Settings. The top nav fits on one line with the bell/profile again; the mobile menu lists every page. Rail quick actions: staff Scan QR + Issues; employee Scan QR only (duplicates removed).
+- Dashboard: no Scan QR on the greeting card (it's in the rail), the content is spread over the card, the row is stretched, and the Asset value chart uses `ColumnChart height="fill"` + `label` (mini chart, no table) so both cards end level.
+
+**User guide (reference only, not in the repo):** an artifact with screenshots of every page and numbered pointers, captured with a Playwright script from the scratchpad. Only Sign in + Dashboard were captured on the laptop (too little memory); the full capture is better run on the PC.
 
 ### 28 Oct 2026 — PC
 Pulled the laptop's `e024baa` and `176bda2`. The user is walking through the full asset lifecycle by hand, one step at a time, with a test asset **AST-LAP-0017 "Flow Test Laptop"** (serial `FLOWTEST001`, Engineering, Chennai HQ), assigned to Arun Kumar.

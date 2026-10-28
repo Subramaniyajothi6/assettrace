@@ -263,3 +263,7 @@
 .toolbar .search input::-webkit-search-cancel-button { appearance: none; display: none; }
 .search-clear { width: 24px; height: 24px; flex: none; border: 0; border-radius: 50%; background: var(--at-chip); color: var(--at-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .search-clear:hover { background: var(--at-line); }
+
+/* Urbanist draws the password mask (•) tiny; use a system face for password fields (unlayered: beats .inp in skins.css). */
+input[type="password"] { font-family: Verdana, "Segoe UI", system-ui, sans-serif; letter-spacing: .14em; }
+input[type="password"]::placeholder { font-family: var(--at-font); letter-spacing: normal; }

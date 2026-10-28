@@ -64,9 +64,12 @@ export default async function EmployeesPage({ searchParams }: { searchParams: Pr
         crumbs={[{ label: "AssetTrace", href: homeFor(user.role) }, { label: "Employees" }]}
         title="Employees"
         actions={
-          <Link className="btn" href="/admin/locations">
-            Locations
-          </Link>
+          <>
+            <Link className="btn" href="/admin/locations">
+              Locations
+            </Link>
+            <AddEmployeeForm departments={deptOpts} locations={locOpts} nextCode={nextCode} tempPassword={DEFAULT_TEMP_PASSWORD()} />
+          </>
         }
       />
       <ListToolbar
@@ -77,66 +80,61 @@ export default async function EmployeesPage({ searchParams }: { searchParams: Pr
           { key: "status", label: "Status", options: [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }] },
         ]}
       />
-      <div className="row">
-        <div className="main-col">
-          <TableCard
-            head={
-              <>
-                <th>Employee</th>
-                <th>Code</th>
-                <th>Department</th>
-                <th>Location</th>
-                <th>Assets held</th>
-                <th>Login</th>
-                <th>Status</th>
-                <th>Active</th>
-                <th>
-                  <span className="sr">Edit</span>
-                </th>
-              </>
-            }
-            empty={{ title: q || dept || loc || status ? "No matches" : "No employees yet", text: "Try a different search or add an employee." }}
-            rows={rows.map((e, i) => (
-              <tr key={e.id} style={{ animationDelay: `${i * 35}ms`, opacity: e.isActive ? 1 : 0.55 }}>
-                <td>
-                  <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <Initials name={e.name} small />
-                    <span>
-                      <b>{e.name}</b>
-                      <br />
-                      <small className="muted">{e.designation ?? e.email}</small>
-                    </span>
-                  </span>
-                </td>
-                <td className="mono" style={{ fontSize: 12 }}>
-                  {e.employeeCode}
-                </td>
-                <td>{e.department.name}</td>
-                <td className="muted">{e.location?.name ?? "—"}</td>
-                <td>
-                  <b>{e._count.currentAssets}</b>
-                </td>
-                <td className="muted" style={{ fontSize: 14 }}>
-                  {e.user ? `${ROLE_LABELS[e.user.role]}${e.user.isActive ? "" : " (off)"}` : "No login"}
-                </td>
-                <td>{e.isActive ? <StatusBadge status="COMPLETED" label="Active" /> : <StatusBadge status="CANCELLED" label="Inactive" />}</td>
-                <td>
-                  <EmployeeToggle id={e.id} name={e.name} active={e.isActive} />
-                </td>
-                <td>
-                  <EditEmployee
-                    v={{ id: e.id, name: e.name, email: e.email, phone: e.phone, designation: e.designation, departmentId: e.departmentId, locationId: e.locationId }}
-                    departments={deptOpts}
-                    locations={locOpts}
-                  />
-                </td>
-              </tr>
-            ))}
-            footer={<Pagination basePath="/employees" sp={sp} page={page} size={size} total={total} />}
-          />
-        </div>
-        <AddEmployeeForm departments={deptOpts} locations={locOpts} nextCode={nextCode} tempPassword={DEFAULT_TEMP_PASSWORD()} />
-      </div>
+      <TableCard
+        head={
+          <>
+            <th>Employee</th>
+            <th>Code</th>
+            <th>Department</th>
+            <th>Location</th>
+            <th>Assets held</th>
+            <th>Login</th>
+            <th>Status</th>
+            <th>Active</th>
+            <th>
+              <span className="sr">Edit</span>
+            </th>
+          </>
+        }
+        empty={{ title: q || dept || loc || status ? "No matches" : "No employees yet", text: "Try a different search or add an employee." }}
+        rows={rows.map((e, i) => (
+          <tr key={e.id} style={{ animationDelay: `${i * 35}ms`, opacity: e.isActive ? 1 : 0.55 }}>
+            <td>
+              <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <Initials name={e.name} small />
+                <span>
+                  <b>{e.name}</b>
+                  <br />
+                  <small className="muted">{e.designation ?? e.email}</small>
+                </span>
+              </span>
+            </td>
+            <td className="mono" style={{ fontSize: 12 }}>
+              {e.employeeCode}
+            </td>
+            <td>{e.department.name}</td>
+            <td className="muted">{e.location?.name ?? "—"}</td>
+            <td>
+              <b>{e._count.currentAssets}</b>
+            </td>
+            <td className="muted" style={{ fontSize: 14 }}>
+              {e.user ? `${ROLE_LABELS[e.user.role]}${e.user.isActive ? "" : " (off)"}` : "No login"}
+            </td>
+            <td>{e.isActive ? <StatusBadge status="COMPLETED" label="Active" /> : <StatusBadge status="CANCELLED" label="Inactive" />}</td>
+            <td>
+              <EmployeeToggle id={e.id} name={e.name} active={e.isActive} />
+            </td>
+            <td>
+              <EditEmployee
+                v={{ id: e.id, name: e.name, email: e.email, phone: e.phone, designation: e.designation, departmentId: e.departmentId, locationId: e.locationId }}
+                departments={deptOpts}
+                locations={locOpts}
+              />
+            </td>
+          </tr>
+        ))}
+        footer={<Pagination basePath="/employees" sp={sp} page={page} size={size} total={total} />}
+      />
     </>
   );
 }

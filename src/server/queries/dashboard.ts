@@ -3,6 +3,7 @@ import { Prisma, type AssetStatus } from "@prisma/client";
 import { prisma } from "../db";
 import { managedAssetScope, requestScope, type CurrentUser } from "../permissions";
 import { STATUS_LABELS } from "@/lib/labels";
+import { threeLetterMonth } from "@/lib/format";
 
 const DAY = 864e5;
 /** Order of segments in the location status bars (in use first, problems last). */
@@ -22,7 +23,7 @@ function lastMonths(n: number, forward = false) {
   const now = new Date();
   return Array.from({ length: n }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() + (forward ? i : i - (n - 1)), 15);
-    return { key: monthKey(d), label: monthLabel.format(d), full: monthYearLabel.format(d) };
+    return { key: monthKey(d), label: threeLetterMonth(monthLabel.format(d)), full: threeLetterMonth(monthYearLabel.format(d)) };
   });
 }
 

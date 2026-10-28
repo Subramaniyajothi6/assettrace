@@ -50,7 +50,9 @@ test("admin adds an employee with a login, then the user appears", async ({ page
   await login(page, "admin");
   await page.goto("/employees");
   const id = uid();
-  const form = page.locator("form").filter({ hasText: "Add employee" });
+  // "Add employee" opens a dialog (the form no longer sits beside the table).
+  await page.getByRole("button", { name: "Add employee" }).click();
+  const form = page.getByRole("dialog");
   await form.getByLabel("Full name *").fill(`Test Person ${id}`);
   await form.getByLabel("Work email *").fill(`test.${id.toLowerCase()}@adz4needz.in`);
   await form.getByLabel("Department *").selectOption({ label: "Engineering" });

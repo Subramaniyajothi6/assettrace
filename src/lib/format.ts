@@ -17,19 +17,24 @@ export function isoDayIST(d: Date = new Date()): string {
   return isoDayFmt.format(d);
 }
 
+/**
+ * Newer ICU data writes September as "Sept" (en-GB, en-IN); the app uses 3-letter months (dd MMM yyyy).
+ */
+export const threeLetterMonth = (s: string) => s.replace(/\bSept\b/, "Sep");
+
 type DateLike = Date | string | null | undefined;
 const toDate = (d: DateLike) => (d == null ? null : d instanceof Date ? d : new Date(d));
 
 /** 24 Oct 2026 */
 export function formatDate(d: DateLike): string {
   const x = toDate(d);
-  return x ? dateFmt.format(x) : "—";
+  return x ? threeLetterMonth(dateFmt.format(x)) : "—";
 }
 
 /** 24 Oct 2026, 9:40 AM */
 export function formatDateTime(d: DateLike): string {
   const x = toDate(d);
-  return x ? `${dateFmt.format(x)}, ${timeFmt.format(x)}` : "—";
+  return x ? `${threeLetterMonth(dateFmt.format(x))}, ${timeFmt.format(x)}` : "—";
 }
 
 /** ₹78,500 */

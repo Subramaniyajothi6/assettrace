@@ -31,7 +31,9 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 
 ## Open items
 
-- [ ] **Deploy to Vercel.** Not set up yet: no Vercel project, CLI not installed. Needs the user to log in (`npx vercel login`), then link the repo and add env vars. On Vercel `DATABASE_URL` must be the transaction pooler (port 6543, `?pgbouncer=true&connection_limit=1`), plus `DIRECT_URL`, `AUTH_SECRET`, `AUTH_TRUST_HOST=true`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET`, `NEXT_PUBLIC_APP_URL`, `CRON_SECRET`.
+- [ ] **Vercel: set `NEXT_PUBLIC_APP_URL`** to `https://assettrace-six.vercel.app` (Settings → Environment Variables), then Redeploy. Only a fallback; QR codes already use the request host.
+- [ ] **README:** add the live URL and screenshots.
+- [x] ~~**Deploy to Vercel.**~~ Done 29 Oct: https://assettrace-six.vercel.app (env var notes in the 29 Oct entry).
 
 - [ ] **Navigation vs the assignment brief (decision pending, ask the user).** The brief's "Main Application Navigation" table lists:
   - **Admin:** Dashboard, Assets, Employees, **Departments, Locations, Categories**, Users, Reports, Settings. The app has instead Dashboard, Assets, Employees, **Requests, Activity**, Reports, Users, **Master data** (tabs Departments/Locations/Categories/Vendors), Settings.
@@ -56,6 +58,24 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 - [ ] **From HANDOFF/LOCAL_SECRETS:** Vercel deployment, README screenshots, Phase 13 enhancements (`docs/ENHANCEMENTS.md`).
 
 ## Log
+
+### 29 Oct 2026 — PC (after midnight): deployed + live check
+**Deployed to Vercel**: **https://assettrace-six.vercel.app** (`assettrace.vercel.app` belongs to someone else). Project `assettrace`, Hobby plan, from `main`: **every push to `main` redeploys production**. Env vars were pasted from `.env`, with `DATABASE_URL` switched to the transaction pooler (6543, `pgbouncer=true&connection_limit=1`) and `NEXT_PUBLIC_DEMO_MODE` removed. The Supabase/Prisma integrations were skipped.
+- QR codes use the request host first (`src/server/url.ts`), so they already point at assettrace-six. `NEXT_PUBLIC_APP_URL` is only a fallback; set it to the real URL anyway (open item).
+- Claude can't type passwords into the live site (rule: only local or test hosts). The user signs in; Claude drives Chrome afterwards.
+
+**Live check, every page as all three roles** (Claude in Chrome): manager 19 pages, admin 11, employee 8 + 2 denied. No console errors, access rules hold, warranty alerts are generated on the live site. A freeze on Settings was a browser dialog, not the app.
+
+**Fixes from the live check** (`tsc`/`eslint` clean; e2e phase2, 4, 7, 9 and 10 pass; checked on localhost in Chrome):
+- **Dates:** newer ICU writes "Sept". `threeLetterMonth()` in `src/lib/format.ts` turns it into "Sep" in `formatDate`/`formatDateTime`, the dashboard month labels and the notification dates.
+- **Profile:** the email breaks only after the @ (`<wbr>`), not inside a word.
+- **Employees:** "Add employee" is now a header button + dialog (`FormDialog`), and the table has the full width. The e2e test opens the dialog.
+- **Maintenance:** Problem/Provider get a min width, the record cell doesn't wrap, and the row actions may wrap to two lines (min 190px).
+- **Password fields** use a system font (Urbanist draws • tiny); pushed earlier as `63f9a10`.
+- **Seed: no future-dated rows.** `d()` now squeezes any time later than the moment of seeding into the hour before it (in order), so "today 10:45" seeded at 00:30 isn't in the future. Intentionally future dates use the new `ahead()` (warranty end, expected return, expected completion). "Registered" is also capped before the first assignment. Checked after reseeding: 0 future history/notifications/assignments, and still 6 warranties within 30 days.
+- **Shell gotcha:** a `node -e` edit turned `` into literal backspace characters in a regex (it silently never matched). Use the editor or a heredoc'd script for code edits. The repo was scanned: no control characters left.
+
+**Database:** reseeded to clean demo data at the end.
 
 ### 28 Oct 2026 — PC (evening): pre-deploy checks
 Pulled `e9a8bb6` and `ea7eb9b`, then ran `npx prisma generate` (the migration was already applied). Getting ready to deploy to Vercel; the user answered one question at a time.

@@ -36,7 +36,12 @@ export default async function ProfilePage() {
           </div>
           <dl className="kv" style={{ gridTemplateColumns: "110px 1fr" }}>
             <dt>Email</dt>
-            <dd>{user.email}</dd>
+            {/* Break only after the @ ("employee@" / "assettrace.dev"), never inside a word. */}
+            <dd style={{ overflowWrap: "normal", wordBreak: "normal" }}>
+              {user.email.split("@")[0]}@
+              <wbr />
+              {user.email.split("@")[1]}
+            </dd>
             <dt>Designation</dt>
             <dd>{emp?.designation ?? "—"}</dd>
             <dt>Department</dt>

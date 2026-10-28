@@ -1,7 +1,7 @@
 "use client";
 
-import { Pencil } from "lucide-react";
-import { ActionForm, Field, Select, SubmitButton } from "@/components/forms/ActionForm";
+import { Pencil, Plus } from "lucide-react";
+import { Field, Select } from "@/components/forms/ActionForm";
 import { FormDialog } from "@/components/forms/FormDialog";
 import { ToggleSwitch } from "@/components/forms/ToggleSwitch";
 import { saveEmployeeAction, toggleEmployeeAction } from "@/actions/people";
@@ -46,16 +46,24 @@ function Fields({ v, departments, locations }: { v?: EmployeeValues; departments
   );
 }
 
+/**
+ * "Add employee" header button + dialog. The form used to sit beside the table and squeezed it until
+ * names and codes wrapped over several lines; in a dialog the table gets the full width.
+ */
 export function AddEmployeeForm({ departments, locations, nextCode, tempPassword }: { departments: Opt[]; locations: Opt[]; nextCode: string; tempPassword: string }) {
   return (
-    <ActionForm
+    <FormDialog
+      trigger={
+        <>
+          <Plus size={17} /> Add employee
+        </>
+      }
+      triggerClassName="pri"
+      title="Add employee"
       action={saveEmployeeAction.bind(null, null)}
       success={(d) => `${d.name} added as ${d.code}`}
-      resetOnSuccess
-      className="card pad side rise"
-      style={{ animationDelay: "80ms", display: "flex", flexDirection: "column", gap: 14 }}
+      submitLabel="Add employee"
     >
-      <h2 className="h2">Add employee</h2>
       <Fields departments={departments} locations={locations} />
       <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14 }}>
         <input type="checkbox" name="createLogin" defaultChecked style={{ width: 20, height: 20 }} />
@@ -65,8 +73,7 @@ export function AddEmployeeForm({ departments, locations, nextCode, tempPassword
         Employee code {nextCode} is assigned automatically. New logins get the temporary password{" "}
         <span className="mono">{tempPassword}</span> and must change it on first sign-in.
       </small>
-      <SubmitButton>Add employee</SubmitButton>
-    </ActionForm>
+    </FormDialog>
   );
 }
 

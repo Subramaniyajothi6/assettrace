@@ -17,8 +17,18 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 const DAY = 864e5;
 
-/** Date `offsetDays` from today at hh:mm local time. */
+const SEEDED_AT = Date.now();
+/** Date `offsetDays` from today at hh:mm local time, never later than the moment of seeding. */
 function d(offsetDays: number, h = 10, m = 0): Date {
+  const t = new Date();
+  t.setHours(h, m, 0, 0);
+  const at = t.getTime() + offsetDays * DAY;
+  // "Today at 10:45" is still in the future when seeding early in the morning. Squeeze any future
+  // time into the hour before seeding, in the same order, so no history row is dated ahead of now.
+  return new Date(at <= SEEDED_AT ? at : SEEDED_AT - 3600e3 + (at - SEEDED_AT) / 24);
+}
+/** A date that is meant to be in the future (warranty end, expected return or completion): not squeezed. */
+function ahead(offsetDays: number, h = 10, m = 0): Date {
   const t = new Date();
   t.setHours(h, m, 0, 0);
   return new Date(t.getTime() + offsetDays * DAY);
@@ -233,7 +243,7 @@ async function main() {
         purchaseDate: d(-boughtAgo),
         purchaseCost: cost,
         warrantyStart: d(-boughtAgo),
-        warrantyEnd: d(warrantyIn),
+        warrantyEnd: ahead(warrantyIn),
         status,
         condition: cond,
         notes: cat === "LAP" ? "16 GB RAM · 512 GB SSD" : null,
@@ -247,7 +257,14 @@ async function main() {
       },
     });
     id[key] = asset.id;
-    hist(key, d(-boughtAgo + 2, 15, 15), "REGISTERED", `Registered as Available · ₹${cost.toLocaleString("en-IN")}`, "Karthik Raman", undefined, "AVAILABLE");
+    // Registered 2 days after purchase, but never after its first assignment or in the future
+    // (an asset bought yesterday and assigned today would otherwise be "registered" tomorrow).
+    const registeredAt = Math.min(
+      d(-boughtAgo + 2, 15, 15).getTime(),
+      holder && assignedAgo !== undefined ? d(-assignedAgo, 10, 45).getTime() - 2 * 3600e3 : Infinity,
+      Date.now() - 3600e3,
+    );
+    hist(key, new Date(registeredAt), "REGISTERED", `Registered as Available · ₹${cost.toLocaleString("en-IN")}`, "Karthik Raman", undefined, "AVAILABLE");
 
     if (holder && assignedAgo !== undefined && handover) {
       const at = d(-assignedAgo, 10, 45);
@@ -261,7 +278,7 @@ async function main() {
           locationId: id[loc],
           assignedById: MGR,
           assignedAt: at,
-          expectedReturnDate: d(-assignedAgo + 365),
+          expectedReturnDate: ahead(-assignedAgo + 365),
           conditionAtAssignment: cond,
           accessories,
           handoverStatus: handover,
@@ -361,7 +378,7 @@ async function main() {
     { no: "MNT-0010", asset: "a8", issue: null, problem: "Hinge broken, beyond repair", type: "REPAIR", provider: "Dell Service, Guindy", date: d(-150), cost: 1200, parts: null, notes: "Not economical to repair", warranty: false, expected: d(-145), actual: d(-145), status: "COMPLETED", before: "RETURNED" },
     { no: "MNT-0012", asset: "a1", issue: "i21", problem: "Keyboard replaced", type: "WARRANTY_CLAIM", provider: "Dell Service, Guindy", date: d(-103), cost: 0, parts: "Keyboard assembly", notes: null, warranty: true, expected: d(-97), actual: d(-97), status: "COMPLETED", before: "ASSIGNED" },
     { no: "MNT-0014", asset: "a21", issue: "i29", problem: "RAM upgrade to 32 GB", type: "UPGRADE", provider: "In-house IT", date: d(-9), cost: 11600, parts: "2× 16 GB DDR5", notes: null, warranty: false, expected: d(-7), actual: d(-7), status: "COMPLETED", before: "ASSIGNED" },
-    { no: "MNT-0015", asset: "a2", issue: "i31", problem: "Battery replacement", type: "REPAIR", provider: "Lenovo Service Centre, Guindy", date: d(-1, 16), cost: 6800, parts: "Battery 57 Wh", notes: null, warranty: false, expected: d(5), actual: null, status: "IN_PROGRESS", before: "ASSIGNED" },
+    { no: "MNT-0015", asset: "a2", issue: "i31", problem: "Battery replacement", type: "REPAIR", provider: "Lenovo Service Centre, Guindy", date: d(-1, 16), cost: 6800, parts: "Battery 57 Wh", notes: null, warranty: false, expected: ahead(5), actual: null, status: "IN_PROGRESS", before: "ASSIGNED" },
     { no: "MNT-0016", asset: "a20", issue: "i33", problem: "Screen flicker", type: "WARRANTY_CLAIM", provider: "BenQ Care, T. Nagar", date: d(-4), cost: 0, parts: null, notes: null, warranty: true, expected: d(-2), actual: null, status: "SCHEDULED", before: "AVAILABLE" },
   ] as const;
   for (const m of maint) {

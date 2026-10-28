@@ -145,7 +145,7 @@ export default async function MaintenancePage({ searchParams }: { searchParams: 
           const lt = isOpen && m.expectedCompletion && daysUntil(m.expectedCompletion) < 0;
           return (
             <tr key={m.id} style={{ animationDelay: `${i * 40}ms` }}>
-              <td>
+              <td style={{ whiteSpace: "nowrap" }}>
                 <span className="tag">{m.maintenanceNo}</span>
                 <br />
                 <small className="muted">
@@ -161,8 +161,8 @@ export default async function MaintenancePage({ searchParams }: { searchParams: 
                   </span>
                 </Link>
               </td>
-              <td style={{ color: "var(--at-soft)" }}>{m.problem}</td>
-              <td style={{ color: "var(--at-soft)" }}>{m.serviceProvider ?? "—"}</td>
+              <td style={{ color: "var(--at-soft)", minWidth: 160 }}>{m.problem}</td>
+              <td style={{ color: "var(--at-soft)", minWidth: 170 }}>{m.serviceProvider ?? "—"}</td>
               <td style={lt ? { color: "var(--at-t-bad)", fontWeight: 700 } : { color: "var(--at-soft)" }}>
                 {m.status === "COMPLETED"
                   ? formatDate(m.actualCompletion)

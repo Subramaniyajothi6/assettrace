@@ -22,8 +22,9 @@ export type MaintenanceDraft = {
 export function MaintenanceRowActions({ id, no, status, held, record }: { id: string; no: string; status: MaintenanceStatus; held: boolean; record: MaintenanceDraft }) {
   const today = isoDayIST();
   const [warranty, setWarranty] = useState(record.warranty);
+  // Wraps to two lines on narrow screens so the text columns keep their width.
   return (
-    <div className="gap8" style={{ justifyContent: "flex-end", flexWrap: "nowrap" }}>
+    <div className="gap8" style={{ justifyContent: "flex-end", flexWrap: "wrap", minWidth: 190 }}>
       {status === "SCHEDULED" ? (
         <ConfirmButton
           action={startMaintenanceAction.bind(null, id)}

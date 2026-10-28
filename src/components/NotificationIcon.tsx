@@ -1,4 +1,5 @@
 import type { NotificationType } from "@prisma/client";
+import { formatDate } from "@/lib/format";
 import { ArrowRightLeft, Bell, Check, PenLine, ShieldAlert, TriangleAlert, Undo2, User, Wrench, type LucideIcon } from "lucide-react";
 
 const T: Record<NotificationType, [string, string, LucideIcon]> = {
@@ -33,5 +34,5 @@ export function ago(d: Date | string, now = new Date()): string {
   if (days <= 0) return `Today, ${time}`;
   if (days === 1) return "Yesterday";
   if (days < 7) return `${days} days ago`;
-  return x.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
+  return formatDate(x);
 }

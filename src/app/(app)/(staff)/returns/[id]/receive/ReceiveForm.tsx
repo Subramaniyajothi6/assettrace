@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { ActionForm, Field, Select, SubmitButton } from "@/components/forms/ActionForm";
 import { receiveReturnAction } from "@/actions/returns";
 import { CONDITION_LABELS } from "@/lib/labels";
 import { isoDayIST } from "@/lib/format";
+import { PHOTO_HINT, photoError } from "@/lib/photos";
 
 export function ReceiveForm({ id, accessories, receiver, holderFirstName }: { id: string; accessories: string[]; receiver: string; holderFirstName: string }) {
   const [got, setGot] = useState(accessories);
@@ -74,7 +76,7 @@ export function ReceiveForm({ id, accessories, receiver, holderFirstName }: { id
             <span>
               <b style={{ color: "var(--at-ink)" }}>{photos.length ? photos.join(", ") : "Add photos of the condition"}</b>
               <br />
-              JPG, PNG or WebP · up to 5 MB each
+              {PHOTO_HINT} each
             </span>
             <input
               type="file"
@@ -82,7 +84,14 @@ export function ReceiveForm({ id, accessories, receiver, holderFirstName }: { id
               multiple
               accept="image/jpeg,image/png,image/webp"
               className="sr"
-              onChange={(e) => setPhotos(Array.from(e.target.files ?? []).map((f) => f.name))}
+              onChange={(e) => {
+                const err = photoError(e.target.files, 3);
+                if (err) {
+                  toast.error(err);
+                  e.target.value = "";
+                }
+                setPhotos(Array.from(e.target.files ?? []).map((f) => f.name));
+              }}
             />
           </label>
         </Field>

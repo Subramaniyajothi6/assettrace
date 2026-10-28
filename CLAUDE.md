@@ -30,7 +30,8 @@ papaparse + xlsx · date-fns · sonner (toasts). Free tiers only. No paid APIs, 
 5. Every read query for MANAGER is filtered by managed departments; EMPLOYEE by own employee id.
    Use helpers `assetScope(user)` etc. from `src/server/permissions.ts`.
 6. Files: upload to private Supabase bucket, store the key, serve via signed URL after a permission check.
-   Max 5 MB, images only (jpeg/png/webp).
+   Max 1 MB per photo (`src/lib/photos.ts`, checked in the browser and on the server — Vercel rejects
+   requests over 4.5 MB before our validation runs), images only (jpeg/png/webp).
 7. Every list page has loading skeleton, empty state, error state, search, filters, pagination.
    Every lifecycle action uses a confirm dialog and a toast.
 8. Mobile-first responsive (sidebar becomes a Sheet below `md`, tables scroll horizontally or become cards).

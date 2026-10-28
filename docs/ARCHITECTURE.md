@@ -172,7 +172,7 @@ Hard business rules:
 - manager@assettrace.dev / Manager@123 (MANAGER, manages IT + Engineering)
 - employee@assettrace.dev / Employee@123 (EMPLOYEE)
 - 4 departments, 3 locations, all 12 categories, 3 vendors, ~12 employees, ~40 assets across all statuses, with assignments, 2 transfers, issues, maintenance, returns+inspections, 2 retired, several warranties expiring in < 30 days → dashboards look alive on first login.
-- Show demo credentials on the login page (only when `NEXT_PUBLIC_DEMO_MODE=true`).
+- The login page does not show demo credentials (removed 28 Oct 2026); share them with evaluators separately.
 
 ## 8. UI system ("v2" style — see the v2 artboards on the design canvas)
 

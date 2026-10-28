@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Camera } from "lucide-react";
+import { toast } from "sonner";
 import { ActionForm, Field, Select, SubmitButton } from "@/components/forms/ActionForm";
 import { createAssetAction, updateAssetAction } from "@/actions/assets";
 import { CONDITION_LABELS } from "@/lib/labels";
 import { isoDayIST } from "@/lib/format";
+import { PHOTO_HINT, photoError } from "@/lib/photos";
 
 type Opt = { id: string; name: string };
 type Options = { categories: (Opt & { code: string })[]; locations: Opt[]; departments: Opt[]; vendors: Opt[] };
@@ -146,13 +148,20 @@ export function AssetForm({ options, asset, prefix, nextNumbers }: { options: Op
               >
                 <Camera size={26} />
                 <b style={{ color: "var(--at-ink)" }}>{photoName ?? (asset ? "Replace the photo" : "Add a photo")}</b>
-                JPG, PNG or WebP · up to 5 MB
+                {PHOTO_HINT}
                 <input
                   type="file"
                   name="photo"
                   accept="image/jpeg,image/png,image/webp"
                   className="sr"
-                  onChange={(e) => setPhotoName(e.target.files?.[0]?.name ?? null)}
+                  onChange={(e) => {
+                const err = photoError(e.target.files);
+                if (err) {
+                  toast.error(err);
+                  e.target.value = "";
+                }
+                setPhotoName(e.target.files?.[0]?.name ?? null);
+              }}
                 />
               </label>
             </Field>

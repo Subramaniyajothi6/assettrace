@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { FilterSelect } from "./FilterSelect";
@@ -15,6 +15,7 @@ export function ListToolbar({ placeholder = "Search", filters = [], children }: 
   const [q, setQ] = useState(sp.get("q") ?? "");
   const [, start] = useTransition();
   const first = useRef(true);
+  const id = useId();
 
   const push = (updates: Record<string, string | null>) => {
     const next = new URLSearchParams(sp.toString());
@@ -41,16 +42,19 @@ export function ListToolbar({ placeholder = "Search", filters = [], children }: 
 
   return (
     <div className="toolbar rise">
-      <label className="search">
+      {/* A div, not a label: the clear button must stay out of the input's accessible name. */}
+      <div className="search">
         <Search size={18} aria-hidden="true" />
-        <span className="sr">{placeholder}</span>
-        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} />
+        <label htmlFor={id} className="sr">
+          {placeholder}
+        </label>
+        <input id={id} type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} />
         {q ? (
           <button type="button" className="search-clear" aria-label="Clear search" onClick={() => setQ("")}>
             <X size={14} />
           </button>
         ) : null}
-      </label>
+      </div>
       {filters.map((f) => (
         <FilterSelect key={f.key} label={f.label} value={sp.get(f.key) ?? ""} options={f.options} onChange={(v) => push({ [f.key]: v })} />
       ))}

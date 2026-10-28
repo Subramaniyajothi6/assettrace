@@ -100,7 +100,6 @@ npm run dev                   # http://localhost:3000
 | `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project settings → API (service key is server-only) |
 | `SUPABASE_BUCKET` | A **private** bucket, default `asset-files` |
 | `NEXT_PUBLIC_APP_URL` | Base URL used in QR codes when the request host is unknown |
-| `NEXT_PUBLIC_DEMO_MODE` | `true` shows the demo accounts on the login page |
 | `CRON_SECRET` | Protects `/api/cron/warranty` (optional daily job) |
 
 ### Demo accounts
@@ -128,7 +127,7 @@ Other seeded users (e.g. `priya@adz4needz.in`) use `Password@123`.
 1. Import the GitHub repo in Vercel. `vercel.json` pins functions to **Tokyo (`hnd1`)**, next to the database,
    and schedules the daily warranty check.
 2. Add the environment variables above (`DATABASE_URL` = transaction pooler with `?pgbouncer=true`,
-   `NEXT_PUBLIC_APP_URL` = the Vercel URL, `NEXT_PUBLIC_DEMO_MODE=true` for evaluators).
+   `NEXT_PUBLIC_APP_URL` = the Vercel URL).
 3. Deploy (the build runs `prisma generate`), then once: `npx prisma migrate deploy` and `npx prisma db seed`
    against the production database.
 

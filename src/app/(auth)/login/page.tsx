@@ -5,15 +5,9 @@ import { getCurrentUser } from "@/server/permissions";
 import { prisma } from "@/server/db";
 import { getSettings } from "@/server/settings";
 import { STATUS_COLORS } from "@/lib/labels";
-import { LoginForm, type DemoAccount } from "./LoginForm";
+import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = { title: "Sign in" };
-
-const DEMO_ACCOUNTS: DemoAccount[] = [
-  { role: "Admin", name: "Anitha Joseph", email: "admin@assettrace.dev", password: "Admin@123" },
-  { role: "Asset manager", name: "Karthik Raman", email: "manager@assettrace.dev", password: "Manager@123" },
-  { role: "Employee", name: "Arun Kumar", email: "employee@assettrace.dev", password: "Employee@123" },
-];
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
@@ -23,7 +17,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   // Status colours only — no asset details are exposed before sign-in.
   const statuses = await prisma.asset.findMany({ select: { status: true }, orderBy: { createdAt: "asc" }, take: 90 });
   const cells = Array.from({ length: Math.min(90, statuses.length * 3) }, (_, i) => statuses[i % statuses.length].status);
-  const demo = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
   return (
     <div className="login">
@@ -48,7 +41,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <small style={{ opacity: 0.7 }}>{orgName} · internal system · authorised staff only</small>
       </section>
       <section className="formside rise" style={{ animationDelay: "120ms" }}>
-        <LoginForm next={next ?? ""} demoAccounts={demo ? DEMO_ACCOUNTS : []} />
+        <LoginForm next={next ?? ""} />
       </section>
     </div>
   );

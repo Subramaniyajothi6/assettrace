@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { Camera } from "lucide-react";
+import { toast } from "sonner";
 import { ActionForm, Field, Select, SubmitButton } from "@/components/forms/ActionForm";
 import { reportIssueAction } from "@/actions/requests";
 import { ISSUE_CATEGORY_LABELS, SEVERITY_LABELS } from "@/lib/labels";
+import { PHOTO_HINT, photoError } from "@/lib/photos";
 
 const SEV = {
   LOW: ["#DCEFE2", "#1F5C3A", "minor annoyance"],
@@ -81,9 +83,22 @@ export function ReportIssueForm({ assets, initialAssetId }: { assets: { id: stri
             <span>
               <b style={{ color: "var(--at-ink)" }}>{photo ? `Attached: ${photo}` : "Add a photo"}</b>
               <br />
-              JPG, PNG or WebP · up to 5 MB
+              {PHOTO_HINT}
             </span>
-            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" className="sr" onChange={(e) => setPhoto(e.target.files?.[0]?.name ?? null)} />
+            <input
+              type="file"
+              name="photo"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr"
+              onChange={(e) => {
+                const err = photoError(e.target.files);
+                if (err) {
+                  toast.error(err);
+                  e.target.value = "";
+                }
+                setPhoto(e.target.files?.[0]?.name ?? null);
+              }}
+            />
           </label>
         </Field>
         <SubmitButton pendingText="Sending…">Report issue</SubmitButton>

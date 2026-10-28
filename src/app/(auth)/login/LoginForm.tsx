@@ -3,13 +3,11 @@
 import { useActionState, useState } from "react";
 import { loginAction, type LoginState } from "@/actions/auth";
 
-export type DemoAccount = { role: string; name: string; email: string; password: string };
-
-export function LoginForm({ next, demoAccounts }: { next: string; demoAccounts: DemoAccount[] }) {
+export function LoginForm({ next }: { next: string }) {
   const [state, formAction, pending] = useActionState<LoginState, FormData>(loginAction, {});
-  const [email, setEmail] = useState(demoAccounts[1]?.email ?? "");
-  const [password, setPassword] = useState(demoAccounts[1]?.password ?? "");
-  const picked = demoAccounts.find((d) => d.email === email);
+  // Controlled so a failed sign-in keeps what was typed (React resets forms after an action).
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   return (
     <form action={formAction} noValidate>
@@ -58,39 +56,8 @@ export function LoginForm({ next, demoAccounts }: { next: string; demoAccounts: 
       ) : null}
 
       <button className="btn pri" style={{ height: 52 }} disabled={pending}>
-        {pending ? "Signing in…" : picked ? `Sign in as ${picked.role.toLowerCase()}` : "Sign in"}
+        {pending ? "Signing in…" : "Sign in"}
       </button>
-
-      {demoAccounts.length ? (
-        <div className="card pad-s" style={{ display: "flex", flexDirection: "column", gap: 8, boxShadow: "none" }}>
-          <small style={{ fontWeight: 700, letterSpacing: ".08em" }} className="muted">
-            DEMO ACCOUNTS · TAP TO FILL
-          </small>
-          {demoAccounts.map((d) => (
-            <button
-              key={d.email}
-              type="button"
-              className="demo"
-              aria-pressed={email === d.email}
-              onClick={() => {
-                setEmail(d.email);
-                setPassword(d.password);
-              }}
-            >
-              <span>
-                <b>{d.role}</b>
-                <br />
-                <small className="muted">{d.name}</small>
-              </span>
-              <span className="mono" style={{ fontSize: 12, textAlign: "right" }}>
-                {d.email}
-                <br />
-                <span className="muted">{d.password}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-      ) : null}
     </form>
   );
 }

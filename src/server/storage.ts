@@ -2,10 +2,10 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { AppError } from "./errors";
+import { MAX_PHOTO_BYTES, MAX_PHOTO_MB } from "@/lib/photos";
 
 /** Private Supabase Storage bucket. Only the server (service role key) can read or write it. */
 const BUCKET = process.env.SUPABASE_BUCKET ?? "asset-files";
-const MAX_BYTES = 5 * 1024 * 1024;
 const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
 let client: SupabaseClient | null = null;
@@ -39,9 +39,9 @@ export function filesFrom(fd: FormData, field: string, max: number): File[] {
   return files;
 }
 
-/** Validate and upload an image (jpeg/png/webp, ≤ 5 MB). Returns the storage key. */
+/** Validate and upload an image (jpeg/png/webp, ≤ MAX_PHOTO_MB). Returns the storage key. */
 export async function uploadImage(file: File, folder: string, field = "photo"): Promise<string> {
-  if (file.size > MAX_BYTES) throw new AppError("Photos must be 5 MB or smaller.", { [field]: "Max 5 MB" });
+  if (file.size > MAX_PHOTO_BYTES) throw new AppError(`Photos must be ${MAX_PHOTO_MB} MB or smaller.`, { [field]: `Max ${MAX_PHOTO_MB} MB` });
   const buf = Buffer.from(await file.arrayBuffer());
   const type = sniff(buf);
   if (!type || !TYPES[type]) throw new AppError("Only JPG, PNG or WebP images.", { [field]: "JPG, PNG or WebP only" });

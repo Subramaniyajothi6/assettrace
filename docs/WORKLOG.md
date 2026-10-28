@@ -32,7 +32,6 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 ## Open items
 
 - [ ] **Deploy to Vercel.** Not set up yet: no Vercel project, CLI not installed. Needs the user to log in (`npx vercel login`), then link the repo and add env vars. On Vercel `DATABASE_URL` must be the transaction pooler (port 6543, `?pgbouncer=true&connection_limit=1`), plus `DIRECT_URL`, `AUTH_SECRET`, `AUTH_TRUST_HOST=true`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET`, `NEXT_PUBLIC_APP_URL`, `CRON_SECRET`.
-- [ ] **After pulling on the PC:** run `npx prisma generate` (new enum value `MAINTENANCE_IN_PROGRESS`; the migration is already applied to the shared database).
 
 - [ ] **Navigation vs the assignment brief (decision pending, ask the user).** The brief's "Main Application Navigation" table lists:
   - **Admin:** Dashboard, Assets, Employees, **Departments, Locations, Categories**, Users, Reports, Settings. The app has instead Dashboard, Assets, Employees, **Requests, Activity**, Reports, Users, **Master data** (tabs Departments/Locations/Categories/Vendors), Settings.
@@ -49,16 +48,35 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 - [ ] **Finish Step 12 of the walkthrough** (final checks): Reports + one Excel export, Arun's notifications / My assets / History, admin Dashboard counts and Activity. Steps 1–11 are done (AST-LAP-0017 registered → … → retired on 28 Oct).
 - [ ] **Run only one dev server at a time.** On 27 Oct the PC hit `EMAXCONNSESSION`. When the laptop checked, it had no server or node process running, yet all 15 slots were held (idle Supavisor clients). So they came from the PC side or processes that never closed. If it happens: `Get-Process node | Stop-Process -Force` on the machine that ran the server. A permanent fix would be the transaction pooler (port 6543 + `pgbouncer=true`) for `DATABASE_URL`.
 - [ ] **KPI tiles on other pages:** the Assets page and the Dashboard location rows now share one `StatusKey` colour key. Dashboard KPIs, Assignments, Maintenance, Users and employee Home still use the old `KpiCard`.
-- [ ] **Dashboard e2e not run** after the 27 Oct breakdown card change. `e2e/phase10-dashboards.spec.ts` was updated but not executed: the e2e suite reseeds the shared database.
 - [ ] **Form dropdowns** (Register asset, Assign, etc.) are still native `<select>` and can open upwards in short windows. The toolbar filters are already fixed. Switch the forms to `FilterSelect`-style dropdowns?
 - [ ] **Locations / Categories:** rename the "Name" field and column to "Location name" / "Category name", to match "Department name" and "Vendor name"?
 - [ ] **Unused visual skins:** the other 7 skins are still in `src/lib/skins.ts` and `src/app/skins.css`, but there's no picker any more. Remove them to shrink the CSS?
 - [ ] **`.claude/` folder** in the repo is untracked but not ignored. Add it to `.gitignore`?
 - [ ] **npm audit** reports 5 vulnerabilities (4 high). Not looked into yet. `npm audit fix --force` would cause breaking upgrades.
-- [ ] **Not yet verified:** full `npm run build` and the Playwright e2e suite after the 26 Oct changes. Only `tsc` and `eslint` were run.
 - [ ] **From HANDOFF/LOCAL_SECRETS:** Vercel deployment, README screenshots, Phase 13 enhancements (`docs/ENHANCEMENTS.md`).
 
 ## Log
+
+### 28 Oct 2026 — PC (evening): pre-deploy checks
+Pulled `e9a8bb6` and `ea7eb9b`, then ran `npx prisma generate` (the migration was already applied). Getting ready to deploy to Vercel; the user answered one question at a time.
+
+**Decisions**
+- **Photos: max 1 MB each** (was 5 MB). Vercel rejects requests over 4.5 MB before the app runs, and a return can carry 3 photos. New `src/lib/photos.ts` (`MAX_PHOTO_BYTES`, `PHOTO_HINT`, `photoError`) is used by `storage.ts` and by the three photo inputs (asset form, report issue, receive return). Those inputs now reject a too-big file in the browser with a toast. `CLAUDE.md` rule 6 was updated.
+- **Demo accounts removed from the login page** (not just hidden). `DEMO_ACCOUNTS`, the tap-to-fill buttons, the pre-filled manager login, "Sign in as …", `NEXT_PUBLIC_DEMO_MODE` (code, `.env.example`, README, ARCHITECTURE) and the `.demo` CSS are gone. **The README "Demo accounts" table is kept**, so evaluators find the logins there.
+- **Database reset to clean demo data** after the tests (`npx prisma db seed`: 34 assets, 14 employees, 7 users). The walkthrough asset AST-LAP-0017 is gone.
+
+**Full e2e run** (production build, `npm start`, all 11 spec files): first run 45 passed, 6 failed. All fixed, and **all 51 now pass**.
+- **Real bug: the notification bell blocked navigation.** `NotificationBell` polled with a server action (`bellDataAction`) on every page change. Next.js runs server actions one at a time on the router queue, so search URL updates, links and post-action refreshes waited behind it and timed out when the database was slow. It now uses `GET /api/notifications/bell` (`src/app/api/notifications/bell/route.ts`, 401 when signed out, `no-store`); `bellDataAction` was removed.
+  - **Rule: never read data with a server action from polling or effects.** Use a GET route.
+- The assign toast test expected the old text (now "Assigned to Arun Kumar" + "AST-LAP-0004 · …").
+- Race test ("two managers assign at once") used `isVisible({ timeout })`, which checks once. It now uses `waitFor`. The app was right: only one assignment was created.
+- The retire test allows 60 s for the redirect. From this PC the asset page takes about 7 s (about a dozen queries to the Tokyo database with 5 connections). It should be fast on Vercel in `hnd1`.
+- **List search:** the × clear button was inside the `<label>`, so the field's accessible name became "… Clear search". `.search` is now a `div` with a separate `<label htmlFor>`.
+
+**Checked**
+- `npm run build` passes, `tsc` and `eslint` are clean, and all 51 e2e tests pass. The database ends on clean seed data.
+
+**Next:** deploy on Vercel (the user imports the repo and adds the env vars; see the first open item), then check the live site as all three users.
 
 ### 28 Oct 2026 — laptop (afternoon)
 Walkthrough Steps 7–11 done with AST-LAP-0017 (MNT-0017 completed ₹3,500 · RET-0015 received, charger missing · inspected Good · retired, recycled). Commit `e9a8bb6`.

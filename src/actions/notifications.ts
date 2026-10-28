@@ -1,12 +1,7 @@
 "use server";
 
 import { run } from "@/server/action";
-import { bellData, markAllNotificationsRead, markNotificationRead } from "@/server/services/notifications";
-
-/** Read-only, polled by the bell; no revalidation needed. */
-export async function bellDataAction() {
-  return bellData();
-}
+import { markAllNotificationsRead, markNotificationRead } from "@/server/services/notifications";
 
 export async function markReadAction(id: string) {
   return run(() => markNotificationRead(id), ["/notifications"]);

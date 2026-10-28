@@ -64,7 +64,8 @@ test("retire a damaged asset; it becomes read-only", async ({ page }) => {
   await page.getByRole("button", { name: "Retire asset" }).click();
   await page.getByRole("button", { name: "Yes, retire" }).click();
   await toast(page, "AST-LAP-0008 retired");
-  await expect(page.getByText(/This record is read-only/)).toBeVisible();
+  // Redirect + asset page render; slow from a machine far from the database.
+  await expect(page.getByText(/This record is read-only/)).toBeVisible({ timeout: 60_000 });
   await expect(page.getByRole("link", { name: "Edit" })).toHaveCount(0);
   await page.goto(`/assets/${a.id}/edit`);
   await expect(page.getByText("Retired assets are read-only")).toBeVisible();

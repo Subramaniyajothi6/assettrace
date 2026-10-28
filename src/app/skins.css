@@ -290,8 +290,6 @@ dl.kv dt{color:var(--at-muted)}dl.kv dd{margin:0;font-weight:600;overflow-wrap:a
 .login .hero h1{margin:0;font-size:46px;line-height:1.08;font-weight:600;letter-spacing:-.03em;max-width:540px}
 .login .formside{flex:1 1 420px;display:flex;align-items:center;justify-content:center;padding:24px 8px}
 .login form{width:100%;max-width:410px;display:flex;flex-direction:column;gap:18px}
-.demo{text-align:left;border:2px solid transparent;background:var(--at-chip);border-radius:calc(var(--at-r2) * .8);padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--at-ink);flex-wrap:wrap}
-.demo[aria-pressed="true"]{border-color:var(--at-on);background:var(--at-card)}
 
 /* ---------- employee mobile nav ---------- */
 .mnav{display:none}

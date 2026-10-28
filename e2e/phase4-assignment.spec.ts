@@ -25,7 +25,7 @@ test("assign → employee signs the handover", async ({ browser }) => {
   const mgr = await browser.newPage();
   await login(mgr, "manager");
   const a = await assign(mgr, "AST-LAP-0004", "Arun Kumar");
-  await toast(mgr, "AST-LAP-0004 assigned to Arun Kumar");
+  await toast(mgr, /Assigned to Arun Kumar.*AST-LAP-0004/);
   await expect(mgr).toHaveURL(/\/assignments$/);
   const row = await db.asset.findUniqueOrThrow({ where: { id: a.id }, include: { currentHolder: true } });
   expect(row.status).toBe("ASSIGNED");
@@ -71,7 +71,9 @@ test("two managers assigning the same asset at once: only one wins", async ({ br
         .locator("[data-sonner-toast]")
         .filter({ hasText: /Only Available or Reserved|already has an active assignment/ })
         .first()
-        .isVisible({ timeout: 20_000 })
+        // isVisible() checks once; waitFor() actually waits for the losing side's error toast.
+        .waitFor({ state: "visible", timeout: 20_000 })
+        .then(() => true)
         .catch(() => false),
     ),
   );

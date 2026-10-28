@@ -7,9 +7,10 @@ import { Bell } from "lucide-react";
 import type { NotificationType } from "@prisma/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationIcon, ago } from "@/components/NotificationIcon";
-import { bellDataAction, markAllReadAction, markReadAction } from "@/actions/notifications";
+import { markAllReadAction, markReadAction } from "@/actions/notifications";
 
-type Item = { id: string; type: NotificationType; title: string; message: string; link: string | null; isRead: boolean; createdAt: Date };
+// createdAt arrives as an ISO string (JSON).
+type Item = { id: string; type: NotificationType; title: string; message: string; link: string | null; isRead: boolean; createdAt: string };
 
 const POLL_MS = 60_000;
 
@@ -24,7 +25,10 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
 
   const refresh = useCallback(async () => {
     try {
-      const d = await bellDataAction();
+      // GET route, not a server action, so polling never queues behind router navigations.
+      const res = await fetch("/api/notifications/bell", { cache: "no-store" });
+      if (!res.ok) return;
+      const d: { unread: number; items: Item[] } = await res.json();
       setUnread(d.unread);
       setItems(d.items);
     } catch {

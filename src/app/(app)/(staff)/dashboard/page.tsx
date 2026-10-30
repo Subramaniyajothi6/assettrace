@@ -3,12 +3,14 @@ import { Plus } from "lucide-react";
 import { requireUser } from "@/server/permissions";
 import { getSettings } from "@/server/settings";
 import { getActionItems, getStaffDashboard } from "@/server/queries/dashboard";
+import { getAdminOverview } from "@/server/queries/admin";
 import { checkWarranties } from "@/server/services/notifications";
 import { PageHeader } from "@/components/PageHeader";
 import { KpiCard } from "@/components/KpiCard";
 import { StatusKey } from "@/components/StatTile";
 import { BreakdownCard, ChartCard, ColumnChart, TrendChart } from "@/components/charts/Charts";
 import { daysUntil } from "@/components/WarrantyCell";
+import { AdminDashboard } from "./AdminDashboard";
 import { firstName, greeting, longDay, rupeeShort } from "@/lib/format";
 import { STATUS_COLORS, STATUS_LABELS, STATUS_ORDER } from "@/lib/labels";
 
@@ -37,31 +39,53 @@ export default async function DashboardPage() {
   const settings = await getSettings();
   // Warranty alerts without a paid cron: idempotent check on dashboard load (ARCHITECTURE.md §5).
   await checkWarranties(user).catch((e) => console.error("warranty check failed", e));
-  const [d, actions] = await Promise.all([getStaffDashboard(user, settings.warrantyAlertDays), getActionItems(user)]);
+  const isAdmin = user.role === "ADMIN";
+  const [d, actions, admin] = await Promise.all([
+    getStaffDashboard(user, settings.warrantyAlertDays),
+    getActionItems(user),
+    isAdmin ? getAdminOverview(user) : null,
+  ]);
   const c = d.counts;
   const now = new Date();
   const toProcess = actions.filter((a) => a.tag === "RET" || a.tag === "INS").length;
   const urgent = actions.filter((a) => a.tag === "!").length;
 
+  const header = (
+    <PageHeader
+      crumbs={[{ label: "AssetTrace", href: "/dashboard" }, { label: "Dashboard" }]}
+      title="Dashboard"
+      actions={
+        <span className="card" style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 18px", borderRadius: "var(--at-pill)" }}>
+          <span className="pulse" />
+          <b>{timeFmt.format(now)}</b>
+          <span style={{ width: 1, height: 26, background: "var(--at-line)" }} />
+          <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+            <b style={{ fontSize: 14 }}>
+              {isAdmin ? "All departments · " : ""}
+              {c.assigned} assets in use
+            </b>
+            <small className="muted">
+              {d.pendingHandovers} handover{d.pendingHandovers === 1 ? "" : "s"} pending
+            </small>
+          </span>
+        </span>
+      }
+    />
+  );
+
+  // Admins get their own layout (organisation view); managers keep the day-to-day dashboard below.
+  if (admin) {
+    return (
+      <>
+        {header}
+        <AdminDashboard data={admin} d={d} actions={actions} name={user.name} now={now} />
+      </>
+    );
+  }
+
   return (
     <>
-      <PageHeader
-        crumbs={[{ label: "AssetTrace", href: "/dashboard" }, { label: "Dashboard" }]}
-        title="Dashboard"
-        actions={
-          <span className="card" style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 18px", borderRadius: "var(--at-pill)" }}>
-            <span className="pulse" />
-            <b>{timeFmt.format(now)}</b>
-            <span style={{ width: 1, height: 26, background: "var(--at-line)" }} />
-            <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
-              <b style={{ fontSize: 14 }}>{c.assigned} assets in use</b>
-              <small className="muted">
-                {d.pendingHandovers} handover{d.pendingHandovers === 1 ? "" : "s"} pending
-              </small>
-            </span>
-          </span>
-        }
-      />
+      {header}
 
       {/* Both cards share one height: the purchases chart fills what the value card has left, and the greeting card spreads its content. */}
       <div className="row" style={{ alignItems: "stretch" }}>

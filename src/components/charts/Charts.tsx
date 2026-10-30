@@ -134,8 +134,8 @@ export function ColumnChart({
 }
 
 /** Area over time (one series), e.g. monthly transactions. */
-export function TrendChart({ data, height = 200, unit = "events" }: { data: Point[]; height?: number; unit?: string }) {
-  const fmt = (n: number) => `${n.toLocaleString("en-IN")} ${unit}`;
+export function TrendChart({ data, height = 200, unit = "events", percent }: { data: Point[]; height?: number; unit?: string; percent?: boolean }) {
+  const fmt = percent ? (n: number) => `${n}%` : (n: number) => `${n.toLocaleString("en-IN")} ${unit}`;
   if (data.every((d) => !d.value)) return <EmptyChart />;
   return (
     <>
@@ -150,13 +150,65 @@ export function TrendChart({ data, height = 200, unit = "events" }: { data: Poin
             </defs>
             <CartesianGrid vertical={false} stroke={GRID} />
             <XAxis dataKey="label" tick={TICK} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-            <YAxis tick={TICK} axisLine={false} tickLine={false} width={28} allowDecimals={false} />
+            <YAxis
+              tick={TICK}
+              axisLine={false}
+              tickLine={false}
+              width={percent ? 38 : 28}
+              allowDecimals={false}
+              domain={percent ? [0, 100] : undefined}
+              ticks={percent ? [0, 25, 50, 75, 100] : undefined}
+              tickFormatter={percent ? (v: number) => `${v}%` : undefined}
+            />
             <Tooltip cursor={{ stroke: "var(--at-muted)", strokeDasharray: "3 3" }} content={tip(fmt)} />
             <Area type="monotone" dataKey="value" stroke={ACCENT} strokeWidth={2} fill="url(#trendFill)" dot={{ r: 3, fill: ACCENT, strokeWidth: 0 }} activeDot={{ r: 5 }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      <TableView data={data} unit={fmt} zeroText="no activity" />
+      <TableView data={data} unit={fmt} zeroText={percent ? "no assets" : "no activity"} />
+    </>
+  );
+}
+
+export type SpendPoint = { label: string; full: string; purchases: number; repairs: number };
+const BUY_COLOR = "var(--at-accent)";
+const FIX_COLOR = "#D08A1E";
+
+/** Purchases vs repair cost per month (admin dashboard): two bars per month, both in ₹. */
+export function SpendChart({ data, height = 200 }: { data: SpendPoint[]; height?: number }) {
+  if (data.every((d) => !d.purchases && !d.repairs)) return <EmptyChart />;
+  const total = (k: "purchases" | "repairs") => data.reduce((n, d) => n + d[k], 0);
+  return (
+    <>
+      <div style={{ width: "100%", height }} role="img" aria-label={`Purchases ${inr(total("purchases"))} and repairs ${inr(total("repairs"))} over the last 12 months`}>
+        <ResponsiveContainer>
+          <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }} barCategoryGap={6} barGap={2}>
+            <CartesianGrid vertical={false} stroke={GRID} />
+            <XAxis dataKey="label" tick={TICK} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+            <YAxis tick={TICK} axisLine={false} tickLine={false} width={52} tickFormatter={compactInr} allowDecimals={false} />
+            <Tooltip
+              cursor={{ fill: "var(--at-chip)" }}
+              content={({ active, payload }) =>
+                active && payload?.length ? (
+                  <TipBox label={String((payload[0].payload as SpendPoint).full)} value={`Purchases ${inr((payload[0].payload as SpendPoint).purchases)} · Repairs ${inr((payload[0].payload as SpendPoint).repairs)}`} />
+                ) : null
+              }
+            />
+            <Bar dataKey="purchases" fill={BUY_COLOR} radius={[4, 4, 0, 0]} maxBarSize={18} />
+            <Bar dataKey="repairs" fill={FIX_COLOR} radius={[4, 4, 0, 0]} maxBarSize={18} minPointSize={(v) => (v ? 2 : 0)} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="status-key">
+        <span>
+          <i style={{ background: BUY_COLOR }} aria-hidden="true" />
+          Purchases {inr(total("purchases"))}
+        </span>
+        <span>
+          <i style={{ background: FIX_COLOR }} aria-hidden="true" />
+          Repairs {inr(total("repairs"))}
+        </span>
+      </div>
     </>
   );
 }

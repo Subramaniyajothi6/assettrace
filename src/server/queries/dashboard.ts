@@ -16,10 +16,10 @@ const TZ = "Asia/Kolkata";
 const monthLabel = new Intl.DateTimeFormat("en-IN", { month: "short", timeZone: TZ });
 const monthYearLabel = new Intl.DateTimeFormat("en-IN", { month: "short", year: "numeric", timeZone: TZ });
 const monthKeyFmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", timeZone: TZ });
-const monthKey = (d: Date) => monthKeyFmt.format(d).slice(0, 7); // 2026-10
+export const monthKey = (d: Date) => monthKeyFmt.format(d).slice(0, 7); // 2026-10
 
 /** Last N calendar months (oldest first) as { key, label }. */
-function lastMonths(n: number, forward = false) {
+export function lastMonths(n: number, forward = false) {
   const now = new Date();
   return Array.from({ length: n }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() + (forward ? i : i - (n - 1)), 15);

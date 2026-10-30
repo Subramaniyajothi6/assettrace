@@ -224,6 +224,33 @@
     .loc-split { grid-column: 1 / -1; order: 5; }
     .loc-stat small { display: block; font-size: 11px; }
   }
+  /* Admin Dashboard (AdminDashboard): wide main column + side panel that stays in view; stacks below 1100px. */
+  .admin-dash { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
+  .admin-main, .admin-side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .admin-side { position: sticky; top: 16px; }
+  @media (max-width: 1100px) { .admin-dash { grid-template-columns: minmax(0, 1fr); } .admin-side { position: static; } }
+  .admin-work { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .admin-work a { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 14px; background: var(--at-chip); color: var(--at-soft); text-decoration: none; font-size: 13px; }
+  .admin-work a:hover { color: var(--at-ink); }
+  .admin-work b { font-size: 22px; font-weight: 600; color: var(--at-ink); font-variant-numeric: tabular-nums; }
+  .admin-top { display: flex; flex-direction: column; font-size: 13px; }
+  .admin-top a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--at-line); color: inherit; text-decoration: none; }
+  .admin-top a span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .admin-top b { font-variant-numeric: tabular-nums; }
+  .admin-age { display: flex; flex-direction: column; gap: 10px; }
+  .admin-age > div { display: grid; grid-template-columns: 100px minmax(0, 1fr) 28px; gap: 10px; align-items: center; font-size: 14px; }
+  .admin-age > div b { text-align: right; font-variant-numeric: tabular-nums; }
+  .admin-depts { min-width: 620px; }
+  .admin-depts th.num, .admin-depts td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .admin-depts .loc-bar { min-width: 160px; }
+  .admin-depts tfoot td { border-top: 2px solid var(--at-ink); font-weight: 700; }
+  .admin-dept { display: inline-flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
+  .admin-roles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .admin-roles span { background: var(--at-chip); border-radius: 14px; padding: 10px 12px; font-size: 13px; color: var(--at-soft); }
+  .admin-roles b { display: block; font-size: 24px; font-weight: 600; color: var(--at-ink); line-height: 1.1; }
+  .admin-signin { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--at-line); }
+  .admin-signin b { display: block; font-size: 14px; }
+  .admin-signin small { font-size: 12.5px; white-space: nowrap; }
   /* "Needs your action": takes the locations card's height and scrolls inside it.
      contain: size stops the list from making the row taller; min-height keeps it usable when stacked. */
   .act-scroll { flex: 1 1 0; min-height: 240px; contain: size; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; scrollbar-width: thin; border-radius: 12px; }
@@ -267,3 +294,28 @@
 /* Urbanist draws the password mask (•) tiny; use a system face for password fields (unlayered: beats .inp in skins.css). */
 input[type="password"] { font-family: Verdana, "Segoe UI", system-ui, sans-serif; letter-spacing: .14em; }
 input[type="password"]::placeholder { font-family: var(--at-font); letter-spacing: normal; }
+
+/* Unlayered on purpose: skins.css is unlayered, so overrides of its .nav rules must be too. */
+/* Pages that live in the rail also sit in the top nav, shown only when the rail is hidden (≤1100px, skins.css). */
+.nav a.nav-rail { display: none; }
+@media (max-width: 1100px) { .nav a.nav-rail { display: flex; } }
+/* Header stays one row (logo · nav · bell/profile) down to 1101px: the skin moves the nav to its own row
+   below 1300px, so undo that. The logo, name and scope line always stay; when space is short the nav
+   shrinks and scrolls sideways instead. */
+@media (min-width: 1101px) { .top { flex-wrap: nowrap; } .top .nav { min-width: 0; } .top .brand, .top .tright { flex-shrink: 0; } }
+@media (min-width: 1101px) and (max-width: 1300px) {
+  .top .nav { order: 0; flex: 0 1 auto; min-width: 0; }
+  .top .nav a { padding: 0 12px; }
+}
+/* ≤1100px the rail's pages join the nav and it no longer fits beside the logo: it gets its own row, with the
+   items spread over it instead of an empty strip on the right (scrolls sideways if they still don't fit). */
+@media (max-width: 1100px) { .top .nav a { flex: 1 0 auto; justify-content: center; } }
+/* Phones: one header row — menu · logo + name · bell · profile. The name gives way (ellipsis, then hidden). */
+@media (max-width: 767px) {
+  .top { flex-wrap: nowrap; gap: 10px; }
+  .top .brand { flex: 1 1 0; min-width: 0; gap: 10px; }
+  .top .brand > span:last-child { min-width: 0; }
+  .top .brand b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; }
+  .top .tright { flex: none; margin-left: 0; gap: 8px; }
+}
+@media (max-width: 340px) { .top .brand > span:last-child { display: none; } }

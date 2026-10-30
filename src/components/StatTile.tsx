@@ -20,6 +20,8 @@ type Props = {
   bar?: { segments: StatSegment[]; total: number; of?: string };
   href?: string;
   delay?: number;
+  /** "bad" shows the number in the alert colour, for a count that needs someone to act. */
+  tone?: "bad";
 };
 
 const VARIANT = { card: "card", dark: "hero-dark", blue: "hero-blue" } as const;
@@ -41,7 +43,7 @@ export function StatusKey({ items, label, className }: { items: { label: string;
 }
 
 /** KPI tile: icon + label on the left, big number on the right, optional bar (status split or single share). */
-export function StatTile({ label, value, sub, icon: Icon, variant = "card", bar, href, delay = 0 }: Props) {
+export function StatTile({ label, value, sub, icon: Icon, variant = "card", bar, href, delay = 0, tone }: Props) {
   const segments = bar?.segments.filter((s) => s.value > 0) ?? [];
   const body = (
     <>
@@ -55,7 +57,9 @@ export function StatTile({ label, value, sub, icon: Icon, variant = "card", bar,
           </span>
           {sub ? <span className="s muted">{sub}</span> : null}
         </div>
-        <span className="v">{value.toLocaleString("en-IN")}</span>
+        <span className="v" style={tone === "bad" && value ? { color: "var(--at-t-bad)" } : undefined}>
+          {value.toLocaleString("en-IN")}
+        </span>
       </div>
       {bar ? (
         <>

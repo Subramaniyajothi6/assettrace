@@ -63,11 +63,11 @@ export function AppShell({ role, name, scopeLabel, badges, unread, allowDark, ch
   const topNav = nav.filter((n) => !n.rail);
   const railPages = nav.filter((n): n is NavItem & { rail: RailIcon } => !!n.rail);
 
-  const navLinks = (items: NavItem[]) =>
+  const navLinks = (items: NavItem[], className?: string) =>
     items.map((n) => {
       const count = n.badge ? badges[n.badge] : 0;
       return (
-        <Link key={n.href} href={n.href} aria-current={isActive(pathname, n.href) ? "page" : undefined}>
+        <Link key={n.href} href={n.href} className={className} aria-current={isActive(pathname, n.href) ? "page" : undefined}>
           {n.label}
           {count ? <span className="badge">{count}</span> : null}
         </Link>
@@ -108,6 +108,8 @@ export function AppShell({ role, name, scopeLabel, badges, unread, allowDark, ch
 
           <nav className="nav" aria-label="Main">
             {navLinks(topNav)}
+            {/* The left rail is hidden below 1100px; its pages then show here (CSS .nav-rail). */}
+            {navLinks(railPages, "nav-rail")}
           </nav>
 
           <div className="tright">

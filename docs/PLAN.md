@@ -98,5 +98,5 @@ Deploy: Vercel → Import repo → add env vars → deploy → run `npx prisma m
 ## Submission checklist
 - [ ] Live URL + GitHub repo link + demo credentials for 3 roles
 - [ ] README with setup, architecture, schema, workflows, screenshots
-- [ ] 3–5 min screen recording: register → assign → confirm → issue → maintenance → return → inspect → retire → history timeline → dashboard → export
+- [x] ~~3–5 min screen recording: register → assign → confirm → issue → maintenance → return → inspect → retire → history timeline → dashboard → export~~ Not needed (user, 29 Oct).
 - [ ] Walk through all 20 items of the "Final Requirement" list once, live

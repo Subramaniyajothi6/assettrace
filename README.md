@@ -5,7 +5,18 @@ for it, what condition it is in, and what happened to it** — from registration
 
 Built as a full-stack Next.js application (internship assignment, Full-Stack Development Intern).
 
-> Screenshots: `docs/screenshots/` _(add before submission: dashboard, asset detail, handover, reports)._
+## Live demo
+
+**https://assettrace-six.vercel.app** · source: https://github.com/Subramaniyajothi6/assettrace
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@assettrace.dev | Admin@123 |
+| Asset manager | manager@assettrace.dev | Manager@123 |
+| Employee | employee@assettrace.dev | Employee@123 |
+
+All demo users share one database. A good tour: sign in as the manager in one window and as the employee
+(Arun Kumar) in a private window, then assign an asset and sign the handover as the employee.
 
 ---
 
@@ -20,16 +31,17 @@ mandatory inspection → retire, with a status state machine that blocks invalid
 | Assets | Register (auto ID `AST-LAP-0001`), edit, photo, category icons, QR label (PNG + printable), search and filter by ID, serial, category, brand, employee, department, location, status, condition, warranty state, purchase year; reserve / release, mark lost / found |
 | Assignment & handover | Assign with location, dates, condition, accessories, remarks; employee confirms with a **drawn signature** or reports a problem (disputed handover); reminders; overdue list |
 | Transfers | Employee or manager requests → manager approves/rejects → new assignment → completes when the new holder signs |
-| Issues & requests | Employee reports issues (category, severity, photo) and requests replacement / return / new asset; manager inbox and **issue board** (reported → under review → maintenance → resolved → closed) |
-| Maintenance | Records with provider, cost, parts, notes, warranty flag, expected/actual dates; completion restores the asset and resolves the issue |
+| Issues & requests | Employee reports issues (category, severity, photo) and requests replacement / return / new asset; manager inbox and an **issues table with progress steps** (reported → under review → maintenance → resolved → closed), sortable, with Open / Resolved / Closed tabs |
+| Maintenance | Records with provider, cost, parts, notes, warranty flag, expected/actual dates; open jobs can be **started and edited** (cost, dates, provider, warranty), every change logged; completion restores the asset and resolves the issue |
 | Returns & inspection | Receive (condition, missing accessories, damage, up to 3 photos) → inspection (screen, keyboard, battery, charger, function…) → result sets Available / Under maintenance / Damaged / Retire |
 | Retirement | Date, reason, final condition, disposal method, authorised by; record becomes read-only and stays in history and reports |
 | History | Every change writes an append-only timeline entry (event, date/time, who); employee history shows only their own holding periods; **Activity** page lists all transactions |
-| Dashboards | Role dashboards with KPI cards, location status bars, "needs your action", charts (status, category, department, location, maintenance cost, warranty expiry, monthly transactions) |
+| Dashboards | **Manager:** today's to-do ("needs your action"), KPI cards, where assets are by location, status / category / department / location breakdown, maintenance cost, warranty expiry and activity charts, all limited to their departments. **Admin:** an organisation view: departments side by side (managers, status split, % in use, value), departments without a manager, employees without a login, open work across departments, users and latest sign-ins, and planning charts (spend on purchases vs repairs, value going out of warranty, asset age by department, share of assets in use). **Employee:** their assets, handovers to sign and requests |
 | Reports & export | 8 reports with filters and preview; **CSV and Excel (.xlsx)** export, scoped to the user |
 | Notifications | In-app bell + page: assigned, handover signed/disputed, transfer requested/completed, return requested, maintenance completed, warranty expiring (idempotent daily check), issue/request updates |
 | Admin | Users & roles, departments (with managers), locations, categories, vendors, employees, system settings (org name, asset ID prefix, warranty window) |
 | Security | Role-based access in three layers, department-scoped managers, private file storage with signed URLs, forced password change for temporary passwords, no hard deletes |
+| Layout | Pill navigation for everyday pages and a floating left bar for the rest (pages, Scan QR, Issues, theme, sign out); light and dark theme with accessible contrast; works on phones (single-row header, menu sheet), tablets and laptops; tables scroll sideways on small screens |
 
 ## Roles
 
@@ -124,6 +136,8 @@ Other seeded users (e.g. `priya@adz4needz.in`) use `Password@123`.
 
 ## Deploying (Vercel, free)
 
+The live demo runs on Vercel's free plan, built from `main`: **every push to `main` redeploys it.**
+
 1. Import the GitHub repo in Vercel. `vercel.json` pins functions to **Tokyo (`hnd1`)**, next to the database,
    and schedules the daily warranty check.
 2. Add the environment variables above (`DATABASE_URL` = transaction pooler with `?pgbouncer=true`,
@@ -150,7 +164,7 @@ Other seeded users (e.g. `priya@adz4needz.in`) use `Password@123`.
 | 13 | View asset history | Asset page → History, `/my-history`, `/activity` |
 | 14 | Handle employee requests | `/requests` |
 | 15 | Search and filter records | Every list page |
-| 16 | View dashboards | `/dashboard`, `/home` |
+| 16 | View dashboards | `/dashboard` (separate admin and manager layouts), `/home` (employee) |
 | 17 | Generate reports | `/reports` |
 | 18 | Export data | CSV / Excel from `/reports` |
 | 19 | Receive notifications | Bell + `/notifications` |

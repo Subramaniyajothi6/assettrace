@@ -31,6 +31,9 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 
 ## Open items
 
+- [ ] **Branch `admin-dashboard` is not merged yet.** It holds the admin dashboard, the admin charts and the header fixes (see the 30 Oct entry). To check: `git switch admin-dashboard`, `npm run dev`, open the Dashboard as admin and as manager. Merging into `main` deploys to the live site.
+- [ ] **Responsive audit unfinished.** Run the audit script (see the 30 Oct entry) on the PC; the laptop only managed 3 pages before running out of memory.
+
 - [ ] **Vercel: set `NEXT_PUBLIC_APP_URL`** to `https://assettrace-six.vercel.app` (Settings → Environment Variables), then Redeploy. Only a fallback; QR codes already use the request host.
 - [ ] **README:** add the live URL and screenshots.
 - [x] ~~**Deploy to Vercel.**~~ Done 29 Oct: https://assettrace-six.vercel.app (env var notes in the 29 Oct entry).
@@ -58,6 +61,22 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 - [ ] **From HANDOFF/LOCAL_SECRETS:** Vercel deployment, README screenshots, Phase 13 enhancements (`docs/ENHANCEMENTS.md`).
 
 ## Log
+
+### 30 Oct 2026 — laptop (branch `admin-dashboard`)
+**Admin dashboard (layout B, picked from mock-ups).** Admins get their own Dashboard (`dashboard/AdminDashboard.tsx`, data from `getAdminOverview` in `src/server/queries/admin.ts`); the manager dashboard is unchanged.
+- Main column: admin greeting (departments without a manager, employees without a login, open work), cards (Departments, Assets, Without a manager in red, Can sign in), Departments table (managers or a "No manager" badge, status bar, assets, % in use, value), status breakdown card, four admin charts.
+- Side panel (sticky, stacks below 1100px): Needs an admin, Open work across departments, Users (by role, latest sign-ins, stale after 3 days in red).
+- Admin charts (picked from a mock-up): **Spend per month** (purchases vs repairs, new `SpendChart`), **Value going out of warranty** (₹ per month for the next 6 months plus the 4 biggest assets), **Asset age by department** (under 1 / 1–2 / 2–3 / 3+ years), **In use per month** (`TrendChart percent`). The manager keeps the old four charts.
+- `StatTile` has `tone="bad"`; `lastMonths`/`monthKey` are exported from `dashboard.ts`.
+- e2e `phase10-dashboards.spec.ts`: admin sees the new sections and charts and not "Needs your action"; manager doesn't see "Needs an admin". Not run.
+
+**Header and nav**
+- Rail pages (Employees/Inspections/Reports, Activity/Settings) also render in the top nav as `.nav-rail`, shown only ≤1100px where the rail is hidden. Before this they had no link at 768–1100px.
+- Above 1100px the header stays one row (logo · nav · bell/profile): the skin's 1300px wrap is undone, the brand never shrinks or hides, the nav shrinks and scrolls sideways if needed. ≤1100px the nav takes its own row with items spread across it. Phones: one row (☰ · logo + name with ellipsis · bell · profile). All rules are unlayered at the end of `globals.css` (skins.css is unlayered).
+
+**Responsive audit (unfinished).** A Playwright script (kept in the scratchpad, not the repo) opens every page as manager/admin/employee at 360/768/1024/1280px and lists elements that stick out past the viewport outside a scroll container. Measured so far: manager Dashboard, Assets, asset record: all OK. The laptop kept running out of memory; rerun on the PC.
+
+**Local dev note.** Chrome on this laptop has a leftover service worker from another project on `localhost:3000` ("AI Interview Arena" offline page); use `127.0.0.1:3000` or unregister it at `chrome://serviceworker-internals`.
 
 ### 29 Oct 2026 — PC (after midnight): deployed + live check
 **Deployed to Vercel**: **https://assettrace-six.vercel.app** (`assettrace.vercel.app` belongs to someone else). Project `assettrace`, Hobby plan, from `main`: **every push to `main` redeploys production**. Env vars were pasted from `.env`, with `DATABASE_URL` switched to the transaction pooler (6543, `pgbouncer=true&connection_limit=1`) and `NEXT_PUBLIC_DEMO_MODE` removed. The Supabase/Prisma integrations were skipped.

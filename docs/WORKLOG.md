@@ -31,7 +31,6 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 
 ## Open items
 
-- [ ] **Branch `admin-dashboard` is not merged yet.** It holds the admin dashboard, the admin charts and the header fixes (see the 30 Oct entry). To check: `git switch admin-dashboard`, `npm run dev`, open the Dashboard as admin and as manager. Merging into `main` deploys to the live site.
 - [ ] **Responsive audit unfinished.** Run the audit script (see the 30 Oct entry) on the PC; the laptop only managed 3 pages before running out of memory.
 
 - [ ] **Vercel: set `NEXT_PUBLIC_APP_URL`** to `https://assettrace-six.vercel.app` (Settings → Environment Variables), then Redeploy. Only a fallback; QR codes already use the request host.
@@ -62,7 +61,7 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 
 ## Log
 
-### 30 Oct 2026 — laptop (branch `admin-dashboard`)
+### 30 Oct 2026 — laptop (admin dashboard; merged into `main` and deployed the same day, branch deleted)
 **Admin dashboard (layout B, picked from mock-ups).** Admins get their own Dashboard (`dashboard/AdminDashboard.tsx`, data from `getAdminOverview` in `src/server/queries/admin.ts`); the manager dashboard is unchanged.
 - Main column: admin greeting (departments without a manager, employees without a login, open work), cards (Departments, Assets, Without a manager in red, Can sign in), Departments table (managers or a "No manager" badge, status bar, assets, % in use, value), status breakdown card, four admin charts.
 - Side panel (sticky, stacks below 1100px): Needs an admin, Open work across departments, Users (by role, latest sign-ins, stale after 3 days in red).

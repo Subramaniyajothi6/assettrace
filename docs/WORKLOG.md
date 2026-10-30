@@ -75,6 +75,8 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 
 **Responsive audit (unfinished).** A Playwright script (kept in the scratchpad, not the repo) opens every page as manager/admin/employee at 360/768/1024/1280px and lists elements that stick out past the viewport outside a scroll container. Measured so far: manager Dashboard, Assets, asset record: all OK. The laptop kept running out of memory; rerun on the PC.
 
+**README** (`3da4ebb`): "Live demo" section at the top (URL, GitHub, the 3 demo logins, two-window tour tip); dashboards, issues table, maintenance edits and layout described; deploy section says every push to `main` redeploys. Submission is due 30 Oct.
+
 **Local dev note.** Chrome on this laptop has a leftover service worker from another project on `localhost:3000` ("AI Interview Arena" offline page); use `127.0.0.1:3000` or unregister it at `chrome://serviceworker-internals`.
 
 ### 29 Oct 2026 — PC (after midnight): deployed + live check

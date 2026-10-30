@@ -4,6 +4,7 @@ import { useOptimistic, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { ActionResult } from "@/server/errors";
+import { undoToast } from "@/components/motion/undoToast";
 
 /** Active/inactive switch that calls a server action and toasts the result. */
 export function ToggleSwitch({
@@ -38,7 +39,12 @@ export function ToggleSwitch({
           setOptimistic(next);
           const res = await action(next);
           if (!res.ok) toast.error(res.error);
-          else toast.success(next ? onText : offText);
+          else
+            undoToast(next ? onText : offText, async () => {
+              const back = await action(!next);
+              if (!back.ok) toast.error(back.error);
+              router.refresh();
+            });
           router.refresh();
         })
       }

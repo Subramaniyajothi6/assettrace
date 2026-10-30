@@ -31,6 +31,7 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 
 ## Open items
 
+- [ ] **Run e2e after the 31 Oct motion changes** (StatusBadge became a client component, ActionForm/SubmitButton changed, toast texts changed). Needs more free memory than this PC had.
 - [ ] **Responsive audit unfinished.** Run the audit script (see the 30 Oct entry) on the PC; the laptop only managed 3 pages before running out of memory.
 
 - [ ] **Vercel: set `NEXT_PUBLIC_APP_URL`** to `https://assettrace-six.vercel.app` (Settings → Environment Variables), then Redeploy. Only a fallback; QR codes already use the request host.
@@ -60,6 +61,33 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 - [ ] **From HANDOFF/LOCAL_SECRETS:** Vercel deployment, README screenshots, Phase 13 enhancements (`docs/ENHANCEMENTS.md`).
 
 ## Log
+
+### 31 Oct 2026 — PC: dark mode, motion
+Pulled the laptop's admin dashboard work (`c53d7ce`…`5ecb7d4`). This PC has only 3.7 GB RAM (about 0.5 GB free); the dev server was once stopped by Claude Code for low memory, and the user declined headless-browser test scripts for the same reason.
+
+**Admin dashboard:** removed the greeting card buttons (Add user, Master data, Reports, All activity); the pages stay in the nav/rail.
+
+**Dark mode (every page):** the skin's cards (#181818) were almost the page colour (#0E0E0E), so card text looked like it floated. Overrides in `globals.css` (after `[data-mode="dark"]`): page #101011, cards #1D1D20 with a 1px #2D2D31 border (`--at-bw/--at-bc`) and a soft shadow, chips/lines/outlines one step lighter, rail #2A2A2F with its own border and deeper shadow. All text tokens checked ≥ 5.7:1 on the new card and chip colours.
+
+**Motion.** The user picked from two demo pages (artifacts "AssetTrace Motion Options" 1–8 and "…II" A–O). Applied: theme switch (1), sliding tabs (4), list refresh (6), count-up (7), and A–I, K, N. Not applied: 2, 3, 5, 8 (first page) and J signature stamp, L QR scan, M quick peek, O field focus. New `src/components/motion/`:
+- `switchTheme.ts` (1): View Transition circle from the moon/sun button. The skin fades body/button colours (`transition: background-color .5s`), which made the "new" snapshot mid-fade and hid the circle, so `.theme-switching` turns transitions off during the switch. Fallback for other browsers: `.theme-fade` colour fade.
+- `TabIndicator.tsx` (4): first child of every `.tabs`/`.seg` bar; one highlight slides to the item with `aria-current="page"`/`aria-selected` (MutationObserver + ResizeObserver). The breakdown card content cross-fades (`.swap-in`).
+- List refresh (6): `.tbl tbody tr` rows fade up with a 30 ms stagger; `ListToolbar` sets `data-list-pending` on <html> while a search/filter loads (table dims); `.skel` shimmers.
+- `CountUp.tsx` (7): wraps the existing `useCountUp`, formats int / ₹ / ₹ short; used in StatTile, dashboard small tiles, Assignments and Maintenance KPIs.
+- `MorphLink.tsx` (A): Assets rows glide into the asset page title (`PageHeader morph` → `data-vt="record-title"`). Waits at most 2.5 s for the new page (Chrome aborts at ~4 s and dev compiles are slow) and swallows the transition's rejections; the first version raised "Transition was aborted because of timeout".
+- B: `ActionForm` keeps a `flash` (ok/err) in context; `SubmitButton` shows a spinner while pending, a drawn tick + green "Saved" for 1.4 s, and shakes on error. `ConfirmButton` shows a spinner.
+- C: `StatusBadge` is now a client component; when its status changes in place it pops, and its row glows (cards get a ring).
+- D: `details::details-content` animates open/close (`interpolate-size`, Chromium).
+- E: `WhenVisible.tsx` mounts Recharts charts only when they scroll into view, so they grow when seen.
+- F: the bell swings and its dot pops when the unread count goes up; drop-down items slide in.
+- G: `FlipTbody.tsx` (in `TableCard`) animates rows to their new place when a sort reorders them.
+- H: `CondenseOnScroll.tsx` sets `data-condensed` past 60 px (back under 10 px); `.ph` is sticky and shrinks to a slim bar.
+- I: `undoToast.ts`: success toast with Undo and a timer line for Mark all as read (new service `markNotificationsUnread` + `markUnreadAction`, owner-scoped, Zod-checked) and the Active switches (Undo flips back).
+- K: issue `.pipe` steps fill left to right via `::after` (`data-on`, `--c`).
+- N: `RollingCount.tsx` rolls nav badge numbers when they change.
+- Everything is off with prefers-reduced-motion (skins.css rule + explicit checks in JS).
+
+**Checked:** `tsc` and `eslint` clean; the user tried the transitions in the browser. e2e not run (memory); `phase9` updated for the new "N notifications marked as read" + Undo toast.
 
 ### 30 Oct 2026 — laptop (admin dashboard; merged into `main` and deployed the same day, branch deleted)
 **Admin dashboard (layout B, picked from mock-ups).** Admins get their own Dashboard (`dashboard/AdminDashboard.tsx`, data from `getAdminOverview` in `src/server/queries/admin.ts`); the manager dashboard is unchanged.

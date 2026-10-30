@@ -7,6 +7,7 @@ import { Pagination } from "@/components/list/Pagination";
 import { homeFor } from "@/components/shell/nav";
 import { paging, param, type SearchParams } from "@/lib/list";
 import { MarkAllRead, NotificationRow } from "./NotificationRow";
+import { TabIndicator } from "@/components/motion/TabIndicator";
 
 export const metadata = { title: "Notifications" };
 
@@ -36,6 +37,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
         actions={
           <>
             <nav className="tabs" aria-label="Filter notifications">
+              <TabIndicator />
               <Link href="/notifications" aria-current={!unreadOnly ? "page" : undefined}>
                 All
               </Link>

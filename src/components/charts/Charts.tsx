@@ -6,6 +6,8 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Too
 import type { AssetStatus } from "@prisma/client";
 import { STATUS_COLORS, STATUS_LABELS, STATUS_ORDER } from "@/lib/labels";
 import type { BreakdownGroup } from "@/server/queries/dashboard";
+import { TabIndicator } from "@/components/motion/TabIndicator";
+import { WhenVisible } from "@/components/motion/WhenVisible";
 
 
 /** `full` is the longer label used in the table, e.g. "May 2026" for a "May" axis tick. */
@@ -118,7 +120,8 @@ export function ColumnChart({
         aria-label={summary}
         style={height === "fill" ? { width: "100%", flex: "1 1 0", minHeight: 110 } : { width: "100%", height }}
       >
-        <ResponsiveContainer>
+        <WhenVisible height="100%">
+          <ResponsiveContainer>
           <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }} barCategoryGap={4}>
             <CartesianGrid vertical={false} stroke={GRID} />
             <XAxis dataKey="label" tick={TICK} axisLine={false} tickLine={false} interval="preserveStartEnd" />
@@ -127,6 +130,7 @@ export function ColumnChart({
             <Bar dataKey="value" fill={ACCENT} radius={[4, 4, 0, 0]} maxBarSize={28} isAnimationActive />
           </BarChart>
         </ResponsiveContainer>
+        </WhenVisible>
       </div>
       {summary ? null : <TableView data={data} unit={fmt} zeroText={zeroText} />}
     </>
@@ -140,7 +144,8 @@ export function TrendChart({ data, height = 200, unit = "events", percent }: { d
   return (
     <>
       <div style={{ width: "100%", height }}>
-        <ResponsiveContainer>
+        <WhenVisible height="100%">
+          <ResponsiveContainer>
           <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
@@ -164,6 +169,7 @@ export function TrendChart({ data, height = 200, unit = "events", percent }: { d
             <Area type="monotone" dataKey="value" stroke={ACCENT} strokeWidth={2} fill="url(#trendFill)" dot={{ r: 3, fill: ACCENT, strokeWidth: 0 }} activeDot={{ r: 5 }} />
           </AreaChart>
         </ResponsiveContainer>
+        </WhenVisible>
       </div>
       <TableView data={data} unit={fmt} zeroText={percent ? "no assets" : "no activity"} />
     </>
@@ -181,7 +187,8 @@ export function SpendChart({ data, height = 200 }: { data: SpendPoint[]; height?
   return (
     <>
       <div style={{ width: "100%", height }} role="img" aria-label={`Purchases ${inr(total("purchases"))} and repairs ${inr(total("repairs"))} over the last 12 months`}>
-        <ResponsiveContainer>
+        <WhenVisible height="100%">
+          <ResponsiveContainer>
           <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }} barCategoryGap={6} barGap={2}>
             <CartesianGrid vertical={false} stroke={GRID} />
             <XAxis dataKey="label" tick={TICK} axisLine={false} tickLine={false} interval="preserveStartEnd" />
@@ -198,6 +205,7 @@ export function SpendChart({ data, height = 200 }: { data: SpendPoint[]; height?
             <Bar dataKey="repairs" fill={FIX_COLOR} radius={[4, 4, 0, 0]} maxBarSize={18} minPointSize={(v) => (v ? 2 : 0)} />
           </BarChart>
         </ResponsiveContainer>
+        </WhenVisible>
       </div>
       <div className="status-key">
         <span>
@@ -247,6 +255,7 @@ export function BreakdownCard({ tabs }: { tabs: BreakdownTab[] }) {
           <small className="muted">{tab.sub}</small>
         </div>
         <div className="seg" role="tablist" aria-label="Break down by" style={{ background: "var(--at-chip)", boxShadow: "none", padding: 4 }}>
+          <TabIndicator />
           {tabs.map((t, i) => (
             <button
               key={t.key}
@@ -268,7 +277,7 @@ export function BreakdownCard({ tabs }: { tabs: BreakdownTab[] }) {
 
       <div id="bd-panel" role="tabpanel" aria-labelledby={`bd-tab-${tab.key}`} style={{ minHeight: rows * 28 + (rows - 1) * 10 }}>
         {tab.groups.length ? (
-          <ul key={tab.key} style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+          <ul key={tab.key} className="swap-in" style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
             {tab.groups.map((g, i) => (
               <li key={g.label} style={{ display: "grid", gridTemplateColumns: "minmax(110px, 20%) 1fr 32px", gap: 12, alignItems: "center", height: 28, fontSize: 14 }}>
                 {g.filter === null ? (

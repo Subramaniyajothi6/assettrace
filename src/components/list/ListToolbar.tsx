@@ -13,7 +13,7 @@ export function ListToolbar({ placeholder = "Search", filters = [], children }: 
   const pathname = usePathname();
   const sp = useSearchParams();
   const [q, setQ] = useState(sp.get("q") ?? "");
-  const [, start] = useTransition();
+  const [pending, start] = useTransition();
   const first = useRef(true);
   const id = useId();
 
@@ -37,6 +37,12 @@ export function ListToolbar({ placeholder = "Search", filters = [], children }: 
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
+
+  // Dims the list while new results load (CSS: [data-list-pending] in globals.css).
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-list-pending", pending);
+    return () => document.documentElement.removeAttribute("data-list-pending");
+  }, [pending]);
 
   const active = filters.some((f) => sp.get(f.key)) || !!sp.get("q");
 

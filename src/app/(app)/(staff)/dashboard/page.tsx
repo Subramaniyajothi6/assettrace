@@ -13,6 +13,7 @@ import { daysUntil } from "@/components/WarrantyCell";
 import { AdminDashboard } from "./AdminDashboard";
 import { firstName, greeting, longDay, rupeeShort } from "@/lib/format";
 import { STATUS_COLORS, STATUS_LABELS, STATUS_ORDER } from "@/lib/labels";
+import { CountUp } from "@/components/motion/CountUp";
 
 export const metadata = { title: "Dashboard" };
 
@@ -182,7 +183,7 @@ export default async function DashboardPage() {
               {l}
             </span>
             <span className="v" style={{ fontSize: 26 }}>
-              {v}
+              <CountUp value={v} />
             </span>
           </Link>
         ))}

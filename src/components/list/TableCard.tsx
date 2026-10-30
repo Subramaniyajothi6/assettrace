@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Inbox } from "lucide-react";
+import { FlipTbody } from "@/components/motion/FlipTbody";
 
 /** Card with a horizontally scrolling table, or an empty state when there are no rows. */
 export function TableCard({
@@ -21,7 +22,7 @@ export function TableCard({
             <thead>
               <tr>{head}</tr>
             </thead>
-            <tbody>{rows}</tbody>
+            <FlipTbody>{rows}</FlipTbody>
           </table>
         </div>
       ) : (

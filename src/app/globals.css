@@ -15,6 +15,17 @@
   --at-t-bad: #F2878C; --at-t-high: #F09A72; --at-t-warn: #E8B35E; --at-t-ok: #7CC79A;
   --at-hd-ok: #1F5C3A; --at-hd-warn: #7A4505; --at-hd-bad: #8E2A12;
 }
+/* Dark mode surfaces (overrides skins.css, which loads first). The skin's cards (#181818) were nearly the
+   page colour (#0E0E0E), so card text looked like it floated on the page. Lift the cards, give them a hairline
+   border and a soft shadow, and step chips/dividers up to match. Applies to every page. */
+[data-skin="warm"][data-mode="dark"] {
+  --at-bg: #101011; --at-card: #1D1D20; --at-chip: #2A2A2E; --at-line: #303034; --at-outline: #47474D;
+  --at-bw: 1px; --at-bc: #2D2D31;
+  --at-shadow: 0 1px 0 rgba(255,255,255,.035) inset, 0 10px 26px rgba(0,0,0,.38);
+  --at-rail: #2A2A2F; --at-greet: linear-gradient(180deg, #222226 0%, #1B1E25 100%);
+}
+/* The floating quick-action rail is black on the light page; in dark mode it needs its own edge to float. */
+[data-skin="warm"][data-mode="dark"] .rail { border: 1px solid #3E3E45; box-shadow: 0 14px 34px rgba(0, 0, 0, .6), 0 0 0 1px rgba(0, 0, 0, .4); }
 
 @theme inline {
   --color-background: var(--background);
@@ -319,3 +330,102 @@ input[type="password"]::placeholder { font-family: var(--at-font); letter-spacin
   .top .tright { flex: none; margin-left: 0; gap: 8px; }
 }
 @media (max-width: 340px) { .top .brand > span:last-child { display: none; } }
+
+/* ── Motion (picked from the transition demos: theme switch, sliding tabs, list refresh, count-up) ──
+   Unlayered so it beats skins.css. skins.css already turns every animation/transition off for
+   prefers-reduced-motion, and switchTheme() skips the circle reveal for it. */
+
+/* Theme switch: switchTheme() runs a View Transition and grows the new theme as a circle; browsers without
+   View Transitions get a short colour fade instead. */
+html.theme-switching::view-transition-old(root), html.theme-switching::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.theme-switching::view-transition-new(root) { z-index: 2; }
+.theme-switching, .theme-switching *, .theme-switching *::before, .theme-switching *::after { transition: none !important; }
+.theme-fade, .theme-fade * { transition: background-color .35s ease, color .35s ease, border-color .35s ease, fill .35s ease !important; }
+
+/* Tabs: <TabIndicator /> slides one highlight behind the active tab; the panel content fades in. */
+.has-ind { position: relative; isolation: isolate; }
+.tab-ind { position: absolute; left: 0; top: 0; z-index: -1; border-radius: var(--at-pill); background: var(--at-on); pointer-events: none; }
+.tab-ind.ready { transition: transform .32s cubic-bezier(.2,.7,.2,1), width .32s cubic-bezier(.2,.7,.2,1), height .32s ease, opacity .2s ease; }
+.has-ind > a[aria-current="page"], .has-ind > button[aria-selected="true"] { background: transparent; }
+.has-ind > a, .has-ind > button { transition: color .25s ease; }
+.swap-in { animation: swapin .22s ease both; }
+@keyframes swapin { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* Lists: rows fade up one after another; the table dims while a search or filter is loading
+   (ListToolbar sets data-list-pending); loading placeholders shimmer. */
+.tbl tbody tr { animation: rowup .32s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes rowup { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.tbl tbody tr:nth-child(2) { animation-delay: 30ms; }
+.tbl tbody tr:nth-child(3) { animation-delay: 60ms; }
+.tbl tbody tr:nth-child(4) { animation-delay: 90ms; }
+.tbl tbody tr:nth-child(5) { animation-delay: 120ms; }
+.tbl tbody tr:nth-child(6) { animation-delay: 150ms; }
+.tbl tbody tr:nth-child(7) { animation-delay: 180ms; }
+.tbl tbody tr:nth-child(8) { animation-delay: 210ms; }
+.tbl tbody tr:nth-child(9) { animation-delay: 240ms; }
+.tbl tbody tr:nth-child(10) { animation-delay: 270ms; }
+.tbl tbody tr:nth-child(11) { animation-delay: 300ms; }
+.tbl tbody tr:nth-child(12) { animation-delay: 330ms; }
+.tbl tbody tr:nth-child(13) { animation-delay: 360ms; }
+.tbl tbody tr:nth-child(14) { animation-delay: 390ms; }
+.tbl tbody tr:nth-child(15) { animation-delay: 420ms; }
+.tw { transition: opacity .2s ease; }
+[data-list-pending] main .tw { opacity: .55; }
+.skel { background: linear-gradient(90deg, var(--at-chip) 0%, var(--at-line) 50%, var(--at-chip) 100%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* ── Motion, part two (picked from the second demo page: A–I, K, N) ── */
+
+/* A. An Assets row glides into the asset page title (MorphLink + PageHeader `morph`). The rest of the
+   page uses the browser's default cross-fade. */
+[data-vt="record-title"] { view-transition-name: record-title; }
+::view-transition-group(record-title) { animation-duration: .42s; animation-timing-function: cubic-bezier(.2,.7,.2,1); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .28s; }
+
+/* B. Submit buttons: spinner while saving, a tick that draws itself when saved, a short shake on error. */
+.btn-state { display: inline-flex; align-items: center; gap: 8px; animation: swapin .2s ease both; }
+.spin { width: 15px; height: 15px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .7s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn.is-saved { background: #2E7D4F; border-color: #2E7D4F; color: #fff; transition: background-color .25s, border-color .25s; }
+.tick { stroke-dasharray: 20; stroke-dashoffset: 20; animation: drawtick .35s .05s cubic-bezier(.2,.7,.2,1) forwards; }
+@keyframes drawtick { to { stroke-dashoffset: 0; } }
+.btn.shake { animation: shake .32s ease; }
+@keyframes shake { 0%, 100% { transform: none; } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-3px); } }
+
+/* D. "Show as table" and other <details> slide open instead of jumping (Chromium; elsewhere they still open). */
+:root { interpolate-size: allow-keywords; }
+details::details-content { block-size: 0; overflow: clip; transition: block-size .32s cubic-bezier(.2,.7,.2,1), content-visibility .32s allow-discrete; }
+details[open]::details-content { block-size: auto; }
+
+/* F. New notification: the dot pops (the bell swing is in NotificationBell); items slide in when it opens. */
+.bell-ic { display: inline-flex; transform-origin: 50% 12%; }
+.dot-pop { animation: dotpop .45s cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes dotpop { from { transform: scale(0); } to { transform: none; } }
+.bell-pop .li { animation: rowup .3s cubic-bezier(.2,.7,.2,1) both; }
+.bell-pop .li:nth-child(2) { animation-delay: 30ms; } .bell-pop .li:nth-child(3) { animation-delay: 60ms; } .bell-pop .li:nth-child(4) { animation-delay: 90ms; }
+.bell-pop .li:nth-child(n+5) { animation-delay: 120ms; }
+
+/* H. The page title sticks to the top and shrinks once you scroll (CondenseOnScroll sets data-condensed). */
+.ph { position: sticky; top: 0; z-index: 15; transition: padding .25s cubic-bezier(.2,.7,.2,1), box-shadow .25s ease, background-color .25s ease; border-radius: 0 0 var(--at-r2) var(--at-r2); }
+.ph .pt { transition: font-size .25s cubic-bezier(.2,.7,.2,1), margin .25s ease; }
+.ph .crumb { max-height: 40px; overflow: hidden; transition: opacity .2s ease, max-height .25s ease; }
+[data-condensed] .ph { background: color-mix(in srgb, var(--at-bg) 88%, transparent); backdrop-filter: blur(10px); box-shadow: 0 8px 20px rgba(0, 0, 0, .08); padding: 8px 14px; margin-inline: -14px; }
+[data-condensed] .ph .pt { font-size: 20px; margin-top: 0; }
+[data-condensed] .ph .crumb { opacity: 0; max-height: 0; }
+
+/* I. Undo toast: a shrinking timer line and a text-style "Undo" button. */
+[data-sonner-toast][data-styled=true].at-toast.has-undo { padding-bottom: 18px; }
+[data-sonner-toast][data-styled=true].at-toast.has-undo::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: 7px; height: 2px; border-radius: 2px; background: currentColor; opacity: .35; transform-origin: left; animation: undotimer 5s linear forwards; }
+@keyframes undotimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+[data-sonner-toast][data-styled=true].at-toast [data-button] { background: transparent; color: var(--at-hb); font-weight: 800; font-size: 14px; height: auto; padding: 4px 6px; align-self: center; margin-left: auto; }
+[data-mode="dark"] [data-sonner-toast][data-styled=true].at-toast [data-button] { color: var(--at-accent); }
+
+/* K. Issue progress: the newly reached step fills left to right in its status colour. */
+.pipe i { position: relative; overflow: hidden; }
+.pipe i::after { content: ""; position: absolute; inset: 0; background: var(--c, var(--at-ink)); border-radius: inherit; transform: scaleX(0); transform-origin: left; transition: transform .45s cubic-bezier(.2,.7,.2,1); }
+.pipe i[data-on]::after { transform: scaleX(1); }
+
+/* N. Nav counts roll up into place when they change. */
+.nav .badge { overflow: hidden; }
+.roll-in { display: inline-block; animation: rollin .35s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes rollin { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }

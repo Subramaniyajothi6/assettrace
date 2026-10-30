@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import type { NotificationType } from "@prisma/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationIcon, ago } from "@/components/NotificationIcon";
-import { markAllReadAction, markReadAction } from "@/actions/notifications";
+import { markAllReadAction, markReadAction, markUnreadAction } from "@/actions/notifications";
+import { undoToast } from "@/components/motion/undoToast";
 
 // createdAt arrives as an ISO string (JSON).
 type Item = { id: string; type: NotificationType; title: string; message: string; link: string | null; isRead: boolean; createdAt: string };
@@ -37,6 +38,19 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
   }, []);
 
   useEffect(() => setUnread(initialUnread), [initialUnread]);
+
+  // Something new arrived: swing the bell once (never on first load, never looping).
+  const iconRef = useRef<HTMLSpanElement>(null);
+  const lastUnread = useRef(initialUnread);
+  useEffect(() => {
+    if (unread > lastUnread.current && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      iconRef.current?.animate(
+        [0, 16, -14, 10, -6, 3, 0].map((deg) => ({ transform: `rotate(${deg}deg)` })),
+        { duration: 700, easing: "ease-out" },
+      );
+    }
+    lastUnread.current = unread;
+  }, [unread]);
   useEffect(() => {
     void refresh();
   }, [pathname, refresh]);
@@ -64,8 +78,10 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
       }}
     >
       <PopoverTrigger className="iconbtn" aria-label={`Notifications, ${unread} unread`}>
-        <Bell size={19} strokeWidth={1.8} />
-        {unread ? <span className="dot" /> : null}
+        <span ref={iconRef} className="bell-ic">
+          <Bell size={19} strokeWidth={1.8} />
+        </span>
+        {unread ? <span key={unread} className="dot dot-pop" /> : null}
       </PopoverTrigger>
       <PopoverContent align="end" className="bell-pop">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 6px 8px" }}>
@@ -78,9 +94,15 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
               className="btn sm"
               onClick={() =>
                 start(async () => {
-                  await markAllReadAction();
+                  const res = await markAllReadAction();
                   await refresh();
                   router.refresh();
+                  if (res.ok)
+                    undoToast(`${res.data.count} marked as read`, async () => {
+                      await markUnreadAction(res.data.ids);
+                      await refresh();
+                      router.refresh();
+                    });
                 })
               }
             >

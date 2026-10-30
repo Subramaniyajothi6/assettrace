@@ -12,6 +12,7 @@ import { homeFor } from "@/components/shell/nav";
 import { ilike, paging, param, type SearchParams } from "@/lib/list";
 import { MASTER_KINDS, type MasterKind } from "@/lib/validation/masterdata";
 import { AddMasterForm, EditMaster, MasterToggle, type MasterValues } from "./MasterForms";
+import { TabIndicator } from "@/components/motion/TabIndicator";
 
 export const metadata = { title: "Master data" };
 
@@ -120,6 +121,7 @@ export default async function MasterPage({ params, searchParams }: { params: Pro
         title="Master data"
         actions={
           <nav className="tabs" aria-label="Master data">
+            <TabIndicator />
             {tabs.map((t) => (
               <Link key={t.kind} href={`/admin/${t.kind}`} aria-current={t.kind === kind ? "page" : undefined}>
                 {t.label}

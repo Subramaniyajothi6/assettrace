@@ -29,6 +29,7 @@ import {
 } from "@/lib/labels";
 import { param, type SearchParams } from "@/lib/list";
 import { AssetActions } from "./AssetActions";
+import { TabIndicator } from "@/components/motion/TabIndicator";
 
 export const metadata = { title: "Asset" };
 
@@ -94,6 +95,7 @@ export default async function AssetPage({ params, searchParams }: { params: Prom
       <PageHeader
         crumbs={[{ label: "Assets", href: "/assets" }, { label: a.category.name, href: `/assets?category=${a.categoryId}` }, { label: a.assetTag }]}
         title={a.name}
+        morph
         actions={<AssetActions asset={a} user={user} openReturn={openReturn} pendingTransfer={pendingTransfer} />}
       />
       <div className="gap8 rise">
@@ -179,6 +181,7 @@ export default async function AssetPage({ params, searchParams }: { params: Prom
           <section className="card rise" style={{ animationDelay: "200ms" }}>
             <div style={{ padding: 10, borderBottom: "1px solid var(--at-line)", overflowX: "auto" }}>
               <nav className="tabs" aria-label="Asset sections" style={{ boxShadow: "none" }}>
+                <TabIndicator />
                 {TABS.map(([k, label]) => (
                   <Link key={k} href={k === "history" ? `/assets/${a.id}` : `/assets/${a.id}?tab=${k}`} aria-current={k === tab ? "page" : undefined} scroll={false}>
                     {label}

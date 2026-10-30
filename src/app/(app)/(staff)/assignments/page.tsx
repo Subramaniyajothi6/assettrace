@@ -14,6 +14,8 @@ import { formatDate } from "@/lib/format";
 import { HANDOVER_LABELS } from "@/lib/labels";
 import { ilike, paging, param, type SearchParams } from "@/lib/list";
 import { AssignmentRowActions } from "./RowActions";
+import { TabIndicator } from "@/components/motion/TabIndicator";
+import { CountUp } from "@/components/motion/CountUp";
 
 export const metadata = { title: "Assignments" };
 
@@ -82,6 +84,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
         actions={
           <>
             <nav className="tabs" aria-label="Assignment views">
+              <TabIndicator />
               {TABS.map((t) => (
                 <Link key={t} href={t === "active" ? "/assignments" : `/assignments?tab=${t}`} aria-current={t === tab ? "page" : undefined}>
                   {tabLabel[t]}
@@ -97,24 +100,32 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
       <div className="kpis">
         <div className="hero-dark kpi rise">
           <span className="l">Active assignments</span>
-          <span className="v">{active}</span>
+          <span className="v">
+            <CountUp value={active} />
+          </span>
           <span className="s muted">in your departments</span>
         </div>
         <div className="hero-blue kpi rise" style={{ animationDelay: "60ms" }}>
           <span className="l">Waiting for signature</span>
-          <span className="v">{waiting}</span>
+          <span className="v">
+            <CountUp value={waiting} />
+          </span>
           <span className="s muted">employees confirm on their phone</span>
         </div>
         <Link href="/assignments?tab=overdue" className="card kpi lift rise" style={{ animationDelay: "120ms" }}>
           <span className="l">Overdue returns</span>
-          <span className="v">{overdue}</span>
+          <span className="v">
+            <CountUp value={overdue} />
+          </span>
           <span className="s" style={{ color: "var(--at-t-bad)" }}>
             past the expected return date
           </span>
         </Link>
         <Link href="/assignments?tab=pending" className="card kpi lift rise" style={{ animationDelay: "180ms" }}>
           <span className="l">Disputed handovers</span>
-          <span className="v">{disputed}</span>
+          <span className="v">
+            <CountUp value={disputed} />
+          </span>
           <span className="s muted">need a follow-up</span>
         </Link>
       </div>

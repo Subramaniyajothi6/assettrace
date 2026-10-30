@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Notification } from "@prisma/client";
 import { NotificationIcon, ago } from "@/components/NotificationIcon";
-import { markAllReadAction, markReadAction } from "@/actions/notifications";
+import { markAllReadAction, markReadAction, markUnreadAction } from "@/actions/notifications";
+import { undoToast } from "@/components/motion/undoToast";
 
 export function NotificationRow({ n }: { n: Notification }) {
   const router = useRouter();
@@ -48,8 +49,12 @@ export function MarkAllRead() {
       onClick={() =>
         start(async () => {
           const res = await markAllReadAction();
-          if (res.ok) toast.success("All notifications marked as read");
-          else toast.error(res.error);
+          if (!res.ok) toast.error(res.error);
+          else
+            undoToast(`${res.data.count} notification${res.data.count === 1 ? "" : "s"} marked as read`, async () => {
+              await markUnreadAction(res.data.ids);
+              router.refresh();
+            });
           router.refresh();
         })
       }

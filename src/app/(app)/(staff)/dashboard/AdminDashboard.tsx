@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Boxes, Building2, Plus, UserRoundX, Users } from "lucide-react";
+import { Boxes, Building2, UserRoundX, Users } from "lucide-react";
 import { AGE_BANDS, type AdminOverview } from "@/server/queries/admin";
 import type { getActionItems, StaffDashboard } from "@/server/queries/dashboard";
 import { StatTile, StatusKey } from "@/components/StatTile";
@@ -82,20 +82,6 @@ export function AdminDashboard({ data, d, actions, name, now }: Props) {
               ) : null}
               , and across all departments <b style={{ color: "var(--at-ink)" }}>{plural(waiting, "item")}</b> {waiting === 1 ? "is" : "are"} waiting on someone.
             </p>
-          </div>
-          <div className="gap8">
-            <Link className="btn pri" href="/admin/users">
-              <Plus size={17} /> Add user
-            </Link>
-            <Link className="btn" href="/admin/departments">
-              Master data
-            </Link>
-            <Link className="btn" href="/reports">
-              Reports
-            </Link>
-            <Link className="btn" href="/activity">
-              All activity
-            </Link>
           </div>
         </section>
 

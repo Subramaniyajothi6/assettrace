@@ -14,6 +14,7 @@ import { CategoryIcon } from "@/components/CategoryIcon";
 import { StatTile, StatusKey } from "@/components/StatTile";
 import { CONDITION_LABELS, STATUS_COLORS, STATUS_LABELS, STATUS_ORDER } from "@/lib/labels";
 import { param, type SearchParams } from "@/lib/list";
+import { MorphLink } from "@/components/motion/MorphLink";
 
 export const metadata = { title: "Assets" };
 
@@ -127,13 +128,13 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
         rows={rows.map((a, i) => (
           <tr key={a.id} style={{ animationDelay: `${Math.min(i * 35, 700)}ms` }}>
             <td>
-              <Link className="cell" href={`/assets/${a.id}`} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <MorphLink className="cell" href={`/assets/${a.id}`} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                 <CategoryIcon code={a.category.code} />
                 <span style={{ display: "flex", flexDirection: "column" }}>
                   <span style={{ fontWeight: 600 }}>{a.name}</span>
                   <span className="tag">{a.assetTag}</span>
                 </span>
-              </Link>
+              </MorphLink>
             </td>
             <td>
               <Link href={`/assets?category=${a.categoryId}`} style={{ color: "var(--at-soft)", textDecoration: "none" }} title={`Show all ${a.category.name.toLowerCase()} assets`}>

@@ -11,6 +11,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { TRANSFER_STATUS_LABELS } from "@/lib/labels";
 import { ilike, paging, param, type SearchParams } from "@/lib/list";
 import { ReviewForm, CancelTransfer } from "./ReviewForm";
+import { TabIndicator } from "@/components/motion/TabIndicator";
 
 export const metadata = { title: "Transfers" };
 
@@ -81,6 +82,7 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
         title="Transfers"
         actions={
           <nav className="tabs" aria-label="Transfer views">
+            <TabIndicator />
             {TABS.map((t) => (
               <Link key={t.key} href={tabHref(t.key)} aria-current={t.key === tab.key ? "page" : undefined}>
                 {t.label}

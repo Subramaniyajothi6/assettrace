@@ -1,13 +1,15 @@
 "use client";
 
-import { Children, cloneElement, createContext, isValidElement, useContext, useId, useState, useTransition } from "react";
+import { Children, cloneElement, createContext, isValidElement, useContext, useEffect, useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { ActionResult } from "@/server/errors";
 import { cn } from "@/lib/utils";
 
-type FormCtx = { errors: Record<string, string>; pending: boolean; prefix: string };
-const Ctx = createContext<FormCtx>({ errors: {}, pending: false, prefix: "f" });
+/** Outcome of the last submit, so the submit button can show a tick or shake (`n` restarts the animation). */
+type Flash = { kind: "ok" | "err"; n: number } | null;
+type FormCtx = { errors: Record<string, string>; pending: boolean; prefix: string; flash: Flash };
+const Ctx = createContext<FormCtx>({ errors: {}, pending: false, prefix: "f", flash: null });
 export const useFormCtx = () => useContext(Ctx);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,6 +43,12 @@ export function ActionForm<R extends AnyResult>({ action, success, redirectTo, o
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pending, start] = useTransition();
   const prefix = useId();
+  const [flash, setFlash] = useState<Flash>(null);
+  useEffect(() => {
+    if (flash?.kind !== "ok") return;
+    const t = setTimeout(() => setFlash(null), 1400);
+    return () => clearTimeout(t);
+  }, [flash]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,6 +59,7 @@ export function ActionForm<R extends AnyResult>({ action, success, redirectTo, o
     const blocked = beforeSubmit ? await beforeSubmit(fd) : null;
     if (blocked) {
       toast.error(blocked);
+      setFlash({ kind: "err", n: Date.now() });
       return;
     }
     start(async () => {
@@ -59,11 +68,13 @@ export function ActionForm<R extends AnyResult>({ action, success, redirectTo, o
       if (!res.ok) {
         setErrors(res.fieldErrors ?? {});
         toast.error(res.error);
+        setFlash({ kind: "err", n: Date.now() });
         const first = res.fieldErrors && Object.keys(res.fieldErrors)[0];
         if (first) (form.querySelector(`[name="${first}"], [name="${first}[]"]`) as HTMLElement | null)?.focus();
         return;
       }
       setErrors({});
+      setFlash({ kind: "ok", n: Date.now() });
       if (success) {
         const msg = typeof success === "function" ? success(res.data) : success;
         if (typeof msg === "string") toast.success(msg);
@@ -77,7 +88,7 @@ export function ActionForm<R extends AnyResult>({ action, success, redirectTo, o
   }
 
   return (
-    <Ctx.Provider value={{ errors, pending, prefix }}>
+    <Ctx.Provider value={{ errors, pending, prefix, flash }}>
       <form onSubmit={onSubmit} className={className} style={style} noValidate>
         {children}
       </form>
@@ -131,10 +142,26 @@ export function SubmitButton({
   value?: string;
   pendingText?: string;
 }) {
-  const { pending } = useFormCtx();
+  const { pending, flash } = useFormCtx();
+  const saved = !pending && flash?.kind === "ok";
+  const shake = !pending && flash?.kind === "err";
   return (
-    <button type="submit" className={cn("btn pri", className)} disabled={pending} name={name} value={value}>
-      {pending ? pendingText : children}
+    // Keyed on the error so each failed submit replays the shake.
+    <button key={shake ? flash.n : "btn"} type="submit" className={cn("btn pri", className, shake && "shake", saved && "is-saved")} disabled={pending} name={name} value={value}>
+      {pending ? (
+        <span className="btn-state">
+          <span className="spin" aria-hidden="true" /> {pendingText}
+        </span>
+      ) : saved ? (
+        <span className="btn-state">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path className="tick" d="M3 8.5l3.2 3L13 4.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>{" "}
+          Saved
+        </span>
+      ) : (
+        children
+      )}
     </button>
   );
 }

@@ -30,6 +30,9 @@ import { ROLE_LABELS } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { NAV, RAIL, homeFor, isActive, type BadgeKey, type NavItem, type RailIcon, type RailItem } from "./nav";
 import { NotificationBell } from "./NotificationBell";
+import { switchTheme } from "@/components/motion/switchTheme";
+import { RollingCount } from "@/components/motion/RollingCount";
+import { CondenseOnScroll } from "@/components/motion/CondenseOnScroll";
 
 type Props = {
   role: Role;
@@ -69,7 +72,11 @@ export function AppShell({ role, name, scopeLabel, badges, unread, allowDark, ch
       return (
         <Link key={n.href} href={n.href} className={className} aria-current={isActive(pathname, n.href) ? "page" : undefined}>
           {n.label}
-          {count ? <span className="badge">{count}</span> : null}
+          {count ? (
+            <span className="badge">
+              <RollingCount value={count} />
+            </span>
+          ) : null}
         </Link>
       );
     });
@@ -124,6 +131,7 @@ export function AppShell({ role, name, scopeLabel, badges, unread, allowDark, ch
           </div>
         </header>
 
+        <CondenseOnScroll />
         <main className="view" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {children}
         </main>
@@ -165,7 +173,7 @@ function Rail({ pages, items, allowDark }: { pages: (RailItem & { active: boolea
           type="button"
           data-tip={dark ? "Light theme" : "Dark theme"}
           aria-label={dark ? "Light theme" : "Dark theme"}
-          onClick={() => setTheme(dark ? "light" : "dark")}
+          onClick={(e) => switchTheme(e.currentTarget, dark ? "light" : "dark", setTheme)}
         >
           {dark ? <Sun size={19} /> : <Moon size={19} />}
         </button>

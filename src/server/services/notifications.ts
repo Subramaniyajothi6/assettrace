@@ -1,5 +1,6 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
+import { z } from "zod";
 import { prisma } from "../db";
 import { NotFoundError } from "../errors";
 import { managedAssetScope, requireUser, type CurrentUser } from "../permissions";
@@ -31,7 +32,17 @@ export async function markNotificationRead(id: string) {
 
 export async function markAllNotificationsRead() {
   const user = await requireUser();
-  const r = await prisma.notification.updateMany({ where: { userId: user.id, isRead: false }, data: { isRead: true } });
+  // Return the ids so the "Undo" in the toast can restore exactly these.
+  const ids = (await prisma.notification.findMany({ where: { userId: user.id, isRead: false }, select: { id: true } })).map((n) => n.id);
+  await prisma.notification.updateMany({ where: { userId: user.id, id: { in: ids } }, data: { isRead: true } });
+  return { count: ids.length, ids };
+}
+
+/** Undo for "mark all as read": only the caller's own notifications can be marked unread again. */
+export async function markNotificationsUnread(input: unknown) {
+  const user = await requireUser();
+  const ids = z.array(z.string().min(1).max(64)).max(1000).parse(input);
+  const r = await prisma.notification.updateMany({ where: { userId: user.id, id: { in: ids } }, data: { isRead: false } });
   return { count: r.count };
 }
 

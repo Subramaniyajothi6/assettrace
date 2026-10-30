@@ -5,6 +5,7 @@ import { requireUser } from "@/server/permissions";
 import { PageHeader } from "@/components/PageHeader";
 import { Timeline } from "@/components/Timeline";
 import { param, type SearchParams } from "@/lib/list";
+import { TabIndicator } from "@/components/motion/TabIndicator";
 
 export const metadata = { title: "My asset history" };
 
@@ -58,6 +59,7 @@ export default async function MyHistoryPage({ searchParams }: { searchParams: Pr
         actions={
           cats.length > 1 ? (
             <nav className="tabs" aria-label="Filter by category">
+              <TabIndicator />
               <Link href="/my-history" aria-current={!cat ? "page" : undefined}>
                 All assets
               </Link>

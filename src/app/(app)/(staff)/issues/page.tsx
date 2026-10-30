@@ -10,6 +10,7 @@ import { formatDate } from "@/lib/format";
 import { ISSUE_CATEGORY_LABELS, ISSUE_STATUS_COLORS, ISSUE_STATUS_LABELS, ISSUE_STATUS_ORDER, SEVERITY_LABELS } from "@/lib/labels";
 import { ilike, paging, param, type SearchParams } from "@/lib/list";
 import { IssueCardActions } from "./IssueCardActions";
+import { TabIndicator } from "@/components/motion/TabIndicator";
 
 export const metadata = { title: "Issues" };
 
@@ -41,7 +42,7 @@ function Progress({ status }: { status: IssueStatus }) {
   return (
     <span className="pipe" role="img" aria-label={`Step ${at + 1} of ${ISSUE_STATUS_ORDER.length}: ${ISSUE_STATUS_LABELS[status]}`}>
       {ISSUE_STATUS_ORDER.map((s, k) => (
-        <i key={s} style={{ background: k < at ? "var(--at-ink)" : k === at ? ISSUE_STATUS_COLORS[status] : undefined }} />
+        <i key={s} data-on={k <= at || undefined} style={{ "--c": k < at ? "var(--at-ink)" : ISSUE_STATUS_COLORS[status] } as React.CSSProperties} />
       ))}
     </span>
   );
@@ -113,6 +114,7 @@ export default async function IssuesPage({ searchParams }: { searchParams: Promi
         title="Issues"
         actions={
           <nav className="tabs" aria-label="Issue views">
+            <TabIndicator />
             {TABS.map((t, k) => (
               <Link key={t} href={href({ tab: t === "open" ? null : t })} aria-current={t === tab ? "page" : undefined}>
                 {TAB_LABEL[t]} · {counts[k]}

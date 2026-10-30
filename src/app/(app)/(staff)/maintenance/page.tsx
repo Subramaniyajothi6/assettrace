@@ -8,11 +8,12 @@ import { Pagination } from "@/components/list/Pagination";
 import { TableCard } from "@/components/list/TableCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { daysUntil } from "@/components/WarrantyCell";
-import { formatDate, isoDayIST, rupee, rupeeShort } from "@/lib/format";
+import { formatDate, isoDayIST, rupee } from "@/lib/format";
 import { MAINTENANCE_STATUS_LABELS, MAINTENANCE_TYPE_LABELS } from "@/lib/labels";
 import { ilike, paging, param, type SearchParams } from "@/lib/list";
 import { RecordMaintenance } from "./RecordMaintenance";
 import { MaintenanceRowActions } from "./RowActions";
+import { CountUp } from "@/components/motion/CountUp";
 
 export const metadata = { title: "Maintenance" };
 
@@ -94,26 +95,34 @@ export default async function MaintenancePage({ searchParams }: { searchParams: 
       <div className="kpis">
         <div className="hero-dark kpi rise">
           <span className="l">In the workshop</span>
-          <span className="v">{scheduled + inProgress}</span>
+          <span className="v">
+            <CountUp value={scheduled + inProgress} />
+          </span>
           <span className="s muted">
             {scheduled} scheduled, {inProgress} in progress
           </span>
         </div>
         <div className="hero-blue kpi rise" style={{ animationDelay: "60ms" }}>
           <span className="l">Spent this month</span>
-          <span className="v">{rupee(spentMonth._sum.cost ?? 0)}</span>
+          <span className="v">
+            <CountUp value={Math.round(Number(spentMonth._sum.cost ?? 0))} format="rupee" />
+          </span>
           <span className="s muted">across {spentAll._count._all} records in total</span>
         </div>
         <Link href="/maintenance?status=open" className="card kpi lift rise" style={{ animationDelay: "120ms" }}>
           <span className="l">Past expected date</span>
-          <span className="v">{late.length}</span>
+          <span className="v">
+            <CountUp value={late.length} />
+          </span>
           <span className="s" style={{ color: "var(--at-t-bad)" }}>
             {late[0]?.asset.name ?? "none"}
           </span>
         </Link>
         <div className="card kpi rise" style={{ animationDelay: "180ms" }}>
           <span className="l">Total repair cost</span>
-          <span className="v">{rupeeShort(Number(spentAll._sum.cost ?? 0))}</span>
+          <span className="v">
+            <CountUp value={Math.round(Number(spentAll._sum.cost ?? 0))} format="rupeeShort" />
+          </span>
           <span className="s muted">all time</span>
         </div>
       </div>

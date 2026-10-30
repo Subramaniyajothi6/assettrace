@@ -57,7 +57,13 @@ export function ConfirmButton({ action, title, description, confirmLabel, succes
             Cancel
           </button>
           <button type="button" className={cn("btn", danger ? "danger" : "pri")} onClick={confirm} disabled={pending}>
-            {pending ? "Working…" : confirmLabel}
+            {pending ? (
+              <span className="btn-state">
+                <span className="spin" aria-hidden="true" /> Working…
+              </span>
+            ) : (
+              confirmLabel
+            )}
           </button>
         </div>
       </AlertDialogContent>

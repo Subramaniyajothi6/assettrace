@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CountUp } from "@/components/motion/CountUp";
 
 /** `color` defaults to the tile's ink colour (used for single "X of total" shares). */
 export type StatSegment = { label: string; value: number; color?: string };
@@ -58,7 +59,7 @@ export function StatTile({ label, value, sub, icon: Icon, variant = "card", bar,
           {sub ? <span className="s muted">{sub}</span> : null}
         </div>
         <span className="v" style={tone === "bad" && value ? { color: "var(--at-t-bad)" } : undefined}>
-          {value.toLocaleString("en-IN")}
+          <CountUp value={value} />
         </span>
       </div>
       {bar ? (

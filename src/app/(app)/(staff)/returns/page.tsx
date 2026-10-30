@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/format";
 import { INSPECTION_RESULT_LABELS, RETURN_STATUS_LABELS } from "@/lib/labels";
 import { ilike, paging, param, type SearchParams } from "@/lib/list";
 import { StartReturn } from "./StartReturn";
+import { TabIndicator } from "@/components/motion/TabIndicator";
 
 export const metadata = { title: "Returns" };
 
@@ -61,6 +62,7 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Prom
         actions={
           <>
             <nav className="tabs" aria-label="Return views">
+              <TabIndicator />
               {TABS.map((t) => (
                 <Link key={t.key} href={t.key === "requested" ? "/returns" : `/returns?tab=${t.key}`} aria-current={t.key === tab.key ? "page" : undefined}>
                   {t.label}

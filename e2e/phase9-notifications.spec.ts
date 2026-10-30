@@ -19,7 +19,9 @@ test("mark all as read on the notifications page", async ({ page }) => {
   await login(page, "manager");
   await page.goto("/notifications?tab=unread");
   await page.getByRole("button", { name: "Mark all as read" }).click();
-  await toast(page, "All notifications marked as read");
+  // The toast now names the count and offers Undo
+  await toast(page, /\d+ notifications? marked as read/);
+  await expect(page.locator("[data-sonner-toast]").getByRole("button", { name: "Undo" })).toBeVisible();
   await expect(page.getByText("You're all caught up")).toBeVisible();
   expect(await db.notification.count({ where: { user: { email: "manager@assettrace.dev" }, isRead: false } })).toBe(0);
 });

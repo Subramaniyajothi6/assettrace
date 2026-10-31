@@ -26,6 +26,9 @@
 }
 /* The floating quick-action rail is black on the light page; in dark mode it needs its own edge to float. */
 [data-skin="warm"][data-mode="dark"] .rail { border: 1px solid #3E3E45; box-shadow: 0 14px 34px rgba(0, 0, 0, .6), 0 0 0 1px rgba(0, 0, 0, .4); }
+/* Rail hover labels: the skin draws them near-black, which vanishes on the dark page. Invert them in dark mode
+   (light label, dark text, 16:1) so they read like the light-mode ones do. */
+[data-mode="dark"] .rail [data-tip]::after { background: #F2F1EE; color: #141414; box-shadow: 0 6px 18px rgba(0, 0, 0, .5); }
 
 @theme inline {
   --color-background: var(--background);
@@ -429,3 +432,9 @@ details[open]::details-content { block-size: auto; }
 .nav .badge { overflow: hidden; }
 .roll-in { display: inline-block; animation: rollin .35s cubic-bezier(.2,.7,.2,1) both; }
 @keyframes rollin { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Entrance animation without the fade from invisible. The skin's `rise` started at opacity 0, so a page made of
+   `.rise` blocks (sign-in, dashboard) painted nothing Chrome counts as content until the animation ended:
+   Lighthouse reported NO_FCP ("The page did not paint any content"). Same slide-up and blur, visible from frame 1.
+   Unlayered and after skins.css, so this definition of `rise` wins. */
+@keyframes rise { from { transform: translateY(14px); filter: blur(4px); } to { transform: none; filter: none; } }

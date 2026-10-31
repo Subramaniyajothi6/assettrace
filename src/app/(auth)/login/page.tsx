@@ -19,7 +19,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const cells = Array.from({ length: Math.min(90, statuses.length * 3) }, (_, i) => statuses[i % statuses.length].status);
 
   return (
-    <div className="login">
+    // <main>: the page's landmark for screen readers (Lighthouse "Document does not have a main landmark").
+    <main className="login">
       <section className="hero rise">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span className="logo" style={{ background: "var(--at-hd-ink)", color: "var(--at-hd)" }}>
@@ -43,6 +44,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <section className="formside rise" style={{ animationDelay: "120ms" }}>
         <LoginForm next={next ?? ""} />
       </section>
-    </div>
+    </main>
   );
 }

@@ -62,6 +62,13 @@ If port 3000 is busy, an old dev server is still running. Stop that node process
 
 ## Log
 
+### 31 Oct 2026 — laptop: Lighthouse
+Pulled the PC's `ee3800c` (motion, dark mode).
+- **Rail hover labels in dark mode** are inverted (light label, dark text); they vanished on the dark page.
+- **Lighthouse NO_FCP fixed** (`eed669a`): the skin's `rise` entrance animation started at `opacity: 0`, so pages built from `.rise` blocks painted nothing Chrome counts as content and PageSpeed reported "The page did not paint any content". `@keyframes rise` is redefined at the end of `globals.css` (slide up + unblur, no fade). Keep entrance animations off `opacity: 0`.
+- **`/robots.txt`** (`src/app/robots.ts`: allow /, disallow /api/), excluded from the auth middleware; **sign-in page is a `<main>` landmark** (`c5c4810`).
+- **PageSpeed on the live sign-in page:** desktop 100 / 100 / 100 / 100, mobile 98 / 100 / 100 / 100 (Performance / Accessibility / Best Practices / SEO). Only the sign-in page is public; logged-in pages need DevTools Lighthouse while signed in.
+
 ### 31 Oct 2026 — PC: dark mode, motion
 Pulled the laptop's admin dashboard work (`c53d7ce`…`5ecb7d4`). This PC has only 3.7 GB RAM (about 0.5 GB free); the dev server was once stopped by Claude Code for low memory, and the user declined headless-browser test scripts for the same reason.
 
